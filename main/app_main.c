@@ -281,16 +281,38 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
 
 static void http_server_netconn_serve(struct netconn *conn)
 {
+    /*  user data buff, it is designed on pbuf
+        struct netbuff{
+            struct pbuf *p, *ptr;
+            struct ip_addr *addr;
+            u16_t port;
+        }
+        netbuf: it is just a header, data storage in the pbuf.
+                p is pointer of the first pbuf struct always,but 
+                ptr maybe point other position. 
+     */
     struct netbuf *inbuf;
     char *buf;
     u16_t buflen;
     err_t err;
-    //Read the data from the port, blocking if nothing yet there.We assume the request (the part we care about) is in one netbuf
+    /*
+    netconn_recv: Read the data from the port, and data recvive from recvmbox, To TCP
+                  ,data in recvmbox is pbuf struct.
+                  blocking if nothing yet there.
+                  We assume the request (the part we care about) is in one netbuf
+    */
     err = netconn_recv(conn, &inbuf);
     if (err == ERR_OK) {
+        /*
+            API function: let ptr of netbuf record pbuf data address put in dataptr
+            buf:    start address of pbuf
+            buflen: data length in the pbuf
+        */
         netbuf_data(inbuf, (void**) &buf, &buflen);
-        /* Is this an HTTP GET command? (only check the first 5 chars, since
-         there are other formats for GET, and we're keeping it very simple )*/
+        /* 
+            Is this an HTTP GET command? (only check the first 5 chars, since
+            there are other formats for GET, and we're keeping it very simple )
+        */
         if (buflen >= 5 && buf[0] == 'G' && buf[1] == 'E' && buf[2] == 'T' && buf[3] == ' ' && buf[4] == '/') {
             printf("000\n");
             // disable videomode (autocapture) to allow streaming...
@@ -299,6 +321,13 @@ static void http_server_netconn_serve(struct netconn *conn)
             /* Send the HTTP header
              * subtract 1 from the size, since we dont send the \0 in the string
              * NETCONN_NOCOPY: our data is const static, so no need to copy it
+             * http_hdr : first address of data
+             * sizeof(http_hdr)-1: length of data
+             * err_t netconn_write(struct netconn *conn, const void *dataptr, size_t size, u8_t apiflags);
+             * #define NETCONN_NOFLAG 0X00
+             * #define NETCONN_NOCOPY 0X00 not copy dataptr data to buff, so don't modify data
+             * #define NETCONN_COPY   0X01 copy data to core thread space
+             * #define NETCONN_MORE   0X02 last TCP package's PSH will be set, and receiver will trans data to upper
              */
             netconn_write(conn, http_hdr, sizeof(http_hdr) - 1,NETCONN_NOCOPY);
             //check if a stream is requested.
@@ -455,21 +484,67 @@ static void http_server_netconn_serve(struct netconn *conn)
 
 static void http_server(void *pvParameters)
 {
-    struct netconn *conn, *newconn;
+    /* in the lwip/api.h
+       struct netconn{
+        enum netconn_type type;
+        enum netconn_state state;
+        union {
+            struct ip_pcb *ip;  // ip control block
+            struct tcp_pcb *tcp; //tcp control block
+            struct udp_pcb *udp; //udp control block
+            struct raw_pcb *raw; // raw control block
+        } pcb;
+        err_t err;  //err flag
+        sys_sem_t op_completed; //semphare
+        sys_mbox_t recvmbox; //receve message box, buff queue
+        sys_mbox_t acceptmbox; //connect accept queue
+        int socket; //socket handle
+        s16_t recv_avail; //buffed len in the receive message box
+        struct api_msg_msg *write_msg; //send buff full, data storage here
+        size_t write_offset; //next times send index
+        netconn_callback callback; //about connect callback function 
+       }
+    */
+    struct netconn *conn, *newconn;  
     err_t err,ert;
-    conn = netconn_new(NETCONN_TCP);
-    netconn_bind(conn, NULL, 80);
-    netconn_listen(conn);
+    /*
+        alloc netconn space for netconn struct     
+    */
+    conn = netconn_new(NETCONN_TCP);  /* creat TCP connector */
+    /*
+    bind netconn&localIP&localPORT
+    */
+    netconn_bind(conn, NULL, 80);  /* bind HTTP port */
+    /*
+    SERVER listen state , register accept_function, if new conn come 
+    */
+    netconn_listen(conn);  /* server listen connect */
     do {
+        /*
+        netconn_accept: get a new conn from acceptmbox, if acceptmbox is NULL,
+                        the thread will be blocked until new conn come. it is diffent of the API 
+                        from IDF,as idf return esp log
+
+        return:         address of new conn struct
+        include:        err_t   netconn_accept(struct netconn *conn, struct netconn **new_conn);
+        */
         err = netconn_accept(conn, &newconn);
-        if (err == ERR_OK) {
+        if (err == ERR_OK) {    /* new conn is coming */
             ert = camera_run();
             printf("%s\n",ert == ERR_OK ? "camer run success" : "camera run failed" );
             vTaskDelay(3000 / portTICK_RATE_MS);
             http_server_netconn_serve(newconn);
+            /*
+            netconn_delete: if status is connecting, after call this function, do active close.
+             , delete newconn struct in the end.
+            */
             netconn_delete(newconn);
         }
     } while (err == ERR_OK);
+    /*
+        netconn_close: function is close TCP conn, means that send a FIN package and return.
+        notes: did not delete the netconn, if user want to delete the struct, call netconn_delete  
+    */
     netconn_close(conn);
     netconn_delete(conn);
 }
