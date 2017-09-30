@@ -242,17 +242,17 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
   uint16_t pixel565_2 = 0;
   uint32_t long2px = 0;
   uint16_t *sptr;
-  int current_src_pos=0, current_dest_pos=0;
-  for (int current_pixel_pos = 0; current_pixel_pos < 160; current_pixel_pos += 2)
+  int current_src_pos = 0, current_dest_pos = 0;
+  for ( int current_pixel_pos = 0; current_pixel_pos < 160; current_pixel_pos += 2 )
   {
-    current_src_pos = current_pixel_pos/2;
+    current_src_pos = current_pixel_pos / 2;
     long2px = srcline[current_src_pos];
     if (format == CAMERA_PF_YUV422) {
         uint8_t y1, y2, u, v;
         y1 = unpack(0,long2px);
-        v = unpack(1,long2px);;
+        v  = unpack(1,long2px);
         y2 = unpack(2,long2px);
-        u = unpack(3,long2px);
+        u  = unpack(3,long2px);
 
         pixel565 = fast_yuv_to_rgb565(y1,u,v);
         pixel565_2 = fast_yuv_to_rgb565(y2,u,v);
@@ -410,10 +410,12 @@ static void http_server_netconn_serve(struct netconn *conn)
                 printf("2\n");
                     netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1, NETCONN_NOCOPY);
                     if (memcmp(&buf[5], "bmp", 3) == 0) {
+                        printf("2-a\n");
                         char *bmp = bmp_create_header565(camera_get_fb_width(), camera_get_fb_height());
                         err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_COPY);
                         free(bmp);
                     } else {
+                        printf("2-b\n");
                         char outstr[120];
                         get_image_mime_info_str(outstr);
                         netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
@@ -467,7 +469,7 @@ static void http_server_netconn_serve(struct netconn *conn)
                         for (int i = 0; i < 120; i++) {
                             printf("sending %d\n", i);
                             fbl = &currFbPtr[(i*160)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                            convert_fb32bit_line_to_bmp565(fbl, s_line,s_pixel_format);
+                            convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
                             err = netconn_write(conn, s_line, 160*2, NETCONN_COPY);
                         }
                         //    ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));

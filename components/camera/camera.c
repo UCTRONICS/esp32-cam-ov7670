@@ -25,7 +25,7 @@
 #include "driver/gpio.h"
 #include "driver/periph_ctrl.h"
 #include "esp_intr_alloc.h"
-#include "esp_heap_alloc_caps.h"
+#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "sensor.h"
 #include "sccb.h"
@@ -256,15 +256,10 @@ int print_frame_data(char* outstr) {
 int get_image_mime_info_str(char* outstr) {
 
   int cnt = 0;
-  char pf[12]; //* pf = new char[12];
-
   cnt += sprintf(outstr+cnt,"Content-Disposition: attachment;filename=\"");
   cnt += print_frame_data(outstr+cnt);
-  //cnt += sprintf(outstr+cnt,"img_%dx%d_%dbpp_%s",s_state->width, s_state->height, s_state->fb_bytes_per_pixel,pf);
-  cnt += sprintf(outstr+cnt,"\".img;Content-type: application/octet-stream\r\n\r\n");
-
+  cnt += sprintf(outstr+cnt,".img\";Content-type: application/octet-stream\r\n\r\n");
   return cnt;
-  // fname: s_state->width, s_state->height, s_state->fb_bytes_per_pixel, s_state->config.pixel_format
 }
 
 esp_err_t camera_init(const camera_config_t* config)
@@ -673,6 +668,7 @@ static void i2s_run()
     }
     ESP_LOGD(TAG, "Got VSYNC");
 
+    //init DMA and intr
     s_state->dma_done = false;
     s_state->dma_desc_cur = 0;
     s_state->dma_received_count = 0;

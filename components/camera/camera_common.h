@@ -62,25 +62,21 @@ typedef struct {
     size_t stride;
     size_t frame_count;
 
-    lldesc_t *dma_desc;
-    dma_elem_t **dma_buf;
+    lldesc_t *dma_desc;               //pointer to array of DMA descriptors
+    dma_elem_t **dma_buf;             //pointer to DMA element
     bool dma_done;
-    size_t dma_desc_count;
-    size_t dma_desc_cur;
-    size_t dma_received_count;
-    size_t dma_filtered_count;
-    size_t dma_per_line;
-    size_t dma_buf_width;
-    size_t dma_sample_count;
+    size_t dma_desc_count;            //count of DMA descriptors
+    size_t dma_desc_cur;              //current DMA descriptors
+    size_t dma_received_count;        // received DMA count
+    size_t dma_filtered_count;        //filtered count of DMA
+    size_t dma_per_line;              //DMA element of per line
+    size_t dma_buf_width;             // buffer width of DMA
+    size_t dma_sample_count;          //count of DMA sample
     i2s_sampling_mode_t sampling_mode;
-    dma_filter_t dma_filter;
+    dma_filter_t dma_filter;          //pointer of function DMA filter
     intr_handle_t i2s_intr_handle;
     intr_handle_t vsync_intr_handle;
     QueueHandle_t data_ready;
     SemaphoreHandle_t frame_ready;
-    TaskHandle_t dma_filter_task;
-
-    // TODO: link LCD to sensor so that latest image is displayed...
-    //TaskHandle_t lcd_display_task;
-
+    TaskHandle_t dma_filter_task;     //DMA filter task
 } camera_state_t;
