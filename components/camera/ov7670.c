@@ -159,6 +159,16 @@ static const uint8_t QQVGA_regs[][2] = {
 	{SCALING_PCLK_DELAY, 0x02}
 };
 
+static const uint8_t HQVGA_regs[][2] = {
+	{COM3, 0x04},
+	{COM14, 0x19},
+	{SCALING_XSC, 0x3A},
+	{SCALING_YSC, 0x35},
+	{SCALING_DCWCTR, 0x21},
+	{SCALING_PCLK_DIV, 0xF1},
+	{SCALING_PCLK_DELAY, 0x02}
+};
+
 #define NUM_BRIGHTNESS_LEVELS (9)
 static const uint8_t brightness_regs[NUM_BRIGHTNESS_LEVELS][2] = {
     {0x38, 0x0e}, /* -4 */
@@ -840,6 +850,12 @@ static int set_framesize(sensor_t *sensor, framesize_t framesize)
 			break;
 		case FRAMESIZE_QQVGA:
 			for (i=0, regs = QQVGA_regs; regs[i][0]; i++)
+			{
+				ret |= SCCB_Write(sensor->slv_addr, regs[i][0], regs[i][1]);
+			}
+			break;
+		case FRAMESIZE_HQVGA:
+			for (i=0, regs = HQVGA_regs; regs[i][0]; i++)
 			{
 				ret |= SCCB_Write(sensor->slv_addr, regs[i][0], regs[i][1]);
 			}

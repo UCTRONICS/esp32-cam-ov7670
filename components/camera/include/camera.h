@@ -34,6 +34,7 @@ typedef enum {
 
 typedef enum {
     CAMERA_FS_QQVGA = 4,     //!< 160x120
+    CAMERA_FS_HQVGA = 7,     //!< 240x160
     CAMERA_FS_QCIF = 6,      //!< 176x144
     CAMERA_FS_QVGA = 8,      //!< 320x240
     CAMERA_FS_VGA = 10,      //!< 640x480

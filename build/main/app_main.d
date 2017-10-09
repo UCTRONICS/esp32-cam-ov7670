@@ -124,10 +124,6 @@ app_main.o: /home/qichuan/workspace/esp32-cam-ov7670/main/./app_main.c \
  /home/qichuan/workspace/esp-idf/components/esp32/include/rom/lldesc.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/rom/queue.h \
  /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/spi_reg.h \
- /home/qichuan/workspace/esp32-cam-ov7670/components/deps/include/driver/hspi.h \
- /home/qichuan/workspace/esp32-cam-ov7670/components/deps/include/driver/spi.h \
- /home/qichuan/workspace/esp32-cam-ov7670/components/deps/include/driver/spi.h \
- /home/qichuan/workspace/esp32-cam-ov7670/components/deps/include/driver/dma.h \
  /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/camera.h \
  /home/qichuan/workspace/esp-idf/components/driver/include/driver/ledc.h \
  /home/qichuan/workspace/esp-idf/components/driver/include/driver/periph_ctrl.h \
@@ -144,9 +140,7 @@ app_main.o: /home/qichuan/workspace/esp32-cam-ov7670/main/./app_main.c \
  /home/qichuan/workspace/esp-idf/components/lwip/include/lwip/lwip/api.h \
  /home/qichuan/workspace/esp-idf/components/lwip/include/lwip/lwip/netbuf.h \
  /home/qichuan/workspace/esp-idf/components/lwip/include/lwip/lwip/pbuf.h \
- /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/bitmap.h \
- /home/qichuan/workspace/esp32-cam-ov7670/components/smallargs/./smallargs.h \
- /home/qichuan/workspace/esp-idf/components/newlib/include/ctype.h
+ /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/bitmap.h
 
 /home/qichuan/workspace/esp-idf/components/newlib/include/stdio.h:
 
@@ -398,14 +392,6 @@ app_main.o: /home/qichuan/workspace/esp32-cam-ov7670/main/./app_main.c \
 
 /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/spi_reg.h:
 
-/home/qichuan/workspace/esp32-cam-ov7670/components/deps/include/driver/hspi.h:
-
-/home/qichuan/workspace/esp32-cam-ov7670/components/deps/include/driver/spi.h:
-
-/home/qichuan/workspace/esp32-cam-ov7670/components/deps/include/driver/spi.h:
-
-/home/qichuan/workspace/esp32-cam-ov7670/components/deps/include/driver/dma.h:
-
 /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/camera.h:
 
 /home/qichuan/workspace/esp-idf/components/driver/include/driver/ledc.h:
@@ -439,8 +425,4 @@ app_main.o: /home/qichuan/workspace/esp32-cam-ov7670/main/./app_main.c \
 /home/qichuan/workspace/esp-idf/components/lwip/include/lwip/lwip/pbuf.h:
 
 /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/bitmap.h:
-
-/home/qichuan/workspace/esp32-cam-ov7670/components/smallargs/./smallargs.h:
-
-/home/qichuan/workspace/esp-idf/components/newlib/include/ctype.h:
 /home/qichuan/workspace/esp32-cam-ov7670/main/./app_main.c:

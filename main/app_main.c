@@ -31,7 +31,7 @@
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "soc/spi_reg.h"
-#include "driver/hspi.h"
+//#include "driver/hspi.h"
 #include "soc/gpio_reg.h"
 #include "esp_attr.h"
 
@@ -49,8 +49,8 @@
 #define WIFI_SSID     CONFIG_WIFI_SSID
 #define CAMERA_PIXEL_FORMAT CAMERA_PF_RGB565
 //#define CAMERA_PIXEL_FORMAT CAMERA_PF_YUV422
-#define CAMERA_FRAME_SIZE CAMERA_FS_QQVGA
-
+//#define CAMERA_FRAME_SIZE CAMERA_FS_QQVGA
+#define CAMERA_FRAME_SIZE CAMERA_FS_HQVGA
 static const char* TAG = "ESP-CAM";
 static EventGroupHandle_t espilicam_event_group;
 EventBits_t uxBits;
@@ -170,14 +170,6 @@ static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
 static ip4_addr_t s_ip_addr;
 
-
-// command parser...
-#include "smallargs.h"
-
-#define UNUSED(x) ((void)x)
-#define RESPONSE_BUFFER_LEN 256
-#define CMD_BUFFER_LEN 128
-
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
     switch (event->event_id) {
@@ -209,7 +201,6 @@ static void init_wifi(void)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    //printf("CONFIG_WIFI_PASSWORD IS %s\n",WIFI_PASSWORD);
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = WIFI_SSID,
@@ -217,7 +208,6 @@ static void init_wifi(void)
         },
     };
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    //ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
     ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
     ESP_ERROR_CHECK( esp_wifi_start() );
     ESP_ERROR_CHECK( esp_wifi_set_ps(WIFI_PS_NONE) );
@@ -243,7 +233,7 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
   uint32_t long2px = 0;
   uint16_t *sptr;
   int current_src_pos = 0, current_dest_pos = 0;
-  for ( int current_pixel_pos = 0; current_pixel_pos < 160; current_pixel_pos += 2 )
+  for ( int current_pixel_pos = 0; current_pixel_pos < 240; current_pixel_pos += 2 )
   {
     current_src_pos = current_pixel_pos / 2;
     long2px = srcline[current_src_pos];
@@ -359,12 +349,12 @@ static void http_server_netconn_serve(struct netconn *conn)
                             free(bmp);
                             // convert framebuffer on the fly...
                             // only rgb and yuv...
-                            uint8_t s_line[160*2];
+                            uint8_t s_line[240*2];
                             uint32_t *fbl;
-                            for (int i = 0; i < 120; i++) {
-                                fbl = &currFbPtr[(i*160)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                            for (int i = 0; i < 160; i++) {
+                                fbl = &currFbPtr[(i*240)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
                                 convert_fb32bit_line_to_bmp565(fbl, s_line,s_pixel_format);
-                                err = netconn_write(conn, s_line, 160*2,NETCONN_COPY);
+                                err = netconn_write(conn, s_line, 240*2,NETCONN_COPY);
                             }
                         }else {
                             printf("03\n");
@@ -464,13 +454,13 @@ static void http_server_netconn_serve(struct netconn *conn)
                     //Send jpeg
                     if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
                         ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
-                        uint8_t s_line[160*2];
+                        uint8_t s_line[240*2];
                         uint32_t *fbl;
-                        for (int i = 0; i < 120; i++) {
+                        for (int i = 0; i < 160; i++) {
                             printf("sending %d\n", i);
-                            fbl = &currFbPtr[(i*160)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                            fbl = &currFbPtr[(i*240)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
                             convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                            err = netconn_write(conn, s_line, 160*2, NETCONN_COPY);
+                            err = netconn_write(conn, s_line, 240*2, NETCONN_COPY);
                         }
                         //    ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
                     } else
@@ -555,7 +545,7 @@ void app_main()
 {
 
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
-    currFbPtr = heap_caps_malloc(160*120*2, MALLOC_CAP_32BIT);
+    currFbPtr = heap_caps_malloc(240*160*2, MALLOC_CAP_32BIT);
 
     ESP_LOGI(TAG,"%s\n",currFbPtr == NULL ? "currFbPtr is NULL" : "currFbPtr not NULL" );
 
