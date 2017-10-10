@@ -45,12 +45,14 @@
 #include "lwip/api.h"
 #include "bitmap.h"
 
+
 #define WIFI_PASSWORD CONFIG_WIFI_PASSWORD
 #define WIFI_SSID     CONFIG_WIFI_SSID
 #define CAMERA_PIXEL_FORMAT CAMERA_PF_RGB565
 //#define CAMERA_PIXEL_FORMAT CAMERA_PF_YUV422
 //#define CAMERA_FRAME_SIZE CAMERA_FS_QQVGA
-#define CAMERA_FRAME_SIZE CAMERA_FS_HQVGA
+//#define CAMERA_FRAME_SIZE CAMERA_FS_HQVGA
+#define CAMERA_FRAME_SIZE CAMERA_FS_QVGA
 static const char* TAG = "ESP-CAM";
 static EventGroupHandle_t espilicam_event_group;
 EventBits_t uxBits;
@@ -94,7 +96,7 @@ static camera_config_t config = {
     .pin_sscb_scl = CONFIG_SCL,
     .pin_reset = CONFIG_RESET,
     .xclk_freq_hz = CONFIG_XCLK_FREQ,
-   // .test_pattern_enabled = CONFIG_ENABLE_TEST_PATTERN,
+    //.test_pattern_enabled = CONFIG_ENABLE_TEST_PATTERN,
     };
 
 static camera_model_t camera_model;
@@ -233,7 +235,7 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
   uint32_t long2px = 0;
   uint16_t *sptr;
   int current_src_pos = 0, current_dest_pos = 0;
-  for ( int current_pixel_pos = 0; current_pixel_pos < 240; current_pixel_pos += 2 )
+  for ( int current_pixel_pos = 0; current_pixel_pos < 320; current_pixel_pos += 2 )
   {
     current_src_pos = current_pixel_pos / 2;
     long2px = srcline[current_src_pos];
@@ -349,12 +351,12 @@ static void http_server_netconn_serve(struct netconn *conn)
                             free(bmp);
                             // convert framebuffer on the fly...
                             // only rgb and yuv...
-                            uint8_t s_line[240*2];
+                            uint8_t s_line[320*2];
                             uint32_t *fbl;
-                            for (int i = 0; i < 160; i++) {
-                                fbl = &currFbPtr[(i*240)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                            for (int i = 0; i < 200; i++) {
+                                fbl = &currFbPtr[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
                                 convert_fb32bit_line_to_bmp565(fbl, s_line,s_pixel_format);
-                                err = netconn_write(conn, s_line, 240*2,NETCONN_COPY);
+                                err = netconn_write(conn, s_line, 320*2,NETCONN_COPY);
                             }
                         }else {
                             printf("03\n");
@@ -454,13 +456,13 @@ static void http_server_netconn_serve(struct netconn *conn)
                     //Send jpeg
                     if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
                         ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
-                        uint8_t s_line[240*2];
+                        uint8_t s_line[320*2];
                         uint32_t *fbl;
-                        for (int i = 0; i < 160; i++) {
+                        for (int i = 0; i < 200; i++) {
                             printf("sending %d\n", i);
-                            fbl = &currFbPtr[(i*240)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                            fbl = &currFbPtr[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
                             convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                            err = netconn_write(conn, s_line, 240*2, NETCONN_COPY);
+                            err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
                         }
                         //    ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
                     } else
@@ -545,7 +547,8 @@ void app_main()
 {
 
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
-    currFbPtr = heap_caps_malloc(240*160*2, MALLOC_CAP_32BIT);
+    //currFbPtr = heap_caps_malloc(240*160*2, MALLOC_CAP_32BIT);
+    currFbPtr = heap_caps_malloc(320*200*2, MALLOC_CAP_32BIT);
 
     ESP_LOGI(TAG,"%s\n",currFbPtr == NULL ? "currFbPtr is NULL" : "currFbPtr not NULL" );
 

@@ -174,10 +174,6 @@ Discarded input sections
                 0x00000000       0x50 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .literal.rtc_clk_slow_freq_get_hz
                 0x00000000       0x10 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .literal.rtc_clk_cpu_freq_get
-                0x00000000       0x28 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .literal.rtc_clk_cpu_freq_value
-                0x00000000       0x2c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .text          0x00000000        0x0 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .data          0x00000000        0x0 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .bss           0x00000000        0x0 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
@@ -193,16 +189,6 @@ Discarded input sections
                 0x00000000      0x162 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .text.rtc_clk_slow_freq_get_hz
                 0x00000000       0x29 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .text.rtc_clk_cpu_freq_get
-                0x00000000       0x94 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .text.rtc_clk_cpu_freq_value
-                0x00000000       0x45 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .rodata.rtc_clk_cpu_freq_value
-                0x00000000       0x14 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .rodata.__func__$2164
-                0x00000000       0x17 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .rodata.__func__$2149
-                0x00000000       0x15 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .xt.lit        0x00000000       0xb8 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .xt.prop       0x00000000      0x99c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .literal.rtc_clk_cal
@@ -303,7 +289,7 @@ END GROUP
  *(.jcr)
                 0x3fff0014                _data_end = ABSOLUTE (.)
 
-.dram0.rodata   0x3fff0014     0x1580
+.dram0.rodata   0x3fff0014     0x15c4
                 0x3fff0014                _rodata_start = ABSOLUTE (.)
  *(.rodata)
  .rodata        0x3fff0014       0x1c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
@@ -338,42 +324,50 @@ END GROUP
                                 0x259 (size before relaxing)
  .rodata.rtc_clk_xtal_freq_estimate
                 0x3fff1530       0x64 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ .rodata.rtc_clk_cpu_freq_value
+                0x3fff1594       0x14 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ .rodata.__func__$2585
+                0x3fff15a8       0x17 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ *fill*         0x3fff15bf        0x1 
+ .rodata.__func__$2570
+                0x3fff15c0       0x15 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  *(.gnu.linkonce.r.*)
  *(.rodata1)
-                0x3fff1594                __XT_EXCEPTION_TABLE_ = ABSOLUTE (.)
+                0x3fff15d5                __XT_EXCEPTION_TABLE_ = ABSOLUTE (.)
  *(.xt_except_table)
  *(.gcc_except_table)
  *(.gnu.linkonce.e.*)
  *(.gnu.version_r)
  *(.eh_frame)
-                0x3fff1594                . = ((. + 0x3) & 0xfffffffc)
-                0x3fff1594                __init_array_start = ABSOLUTE (.)
+                0x3fff15d8                . = ((. + 0x3) & 0xfffffffc)
+ *fill*         0x3fff15d5        0x3 
+                0x3fff15d8                __init_array_start = ABSOLUTE (.)
  *crtbegin.o(.ctors)
  *(EXCLUDE_FILE(*crtend.o) .ctors)
  *(SORT(.ctors.*))
  *(.ctors)
-                0x3fff1594                __init_array_end = ABSOLUTE (.)
+                0x3fff15d8                __init_array_end = ABSOLUTE (.)
  *crtbegin.o(.dtors)
  *(EXCLUDE_FILE(*crtend.o) .dtors)
  *(SORT(.dtors.*))
  *(.dtors)
-                0x3fff1594                __XT_EXCEPTION_DESCS_ = ABSOLUTE (.)
+                0x3fff15d8                __XT_EXCEPTION_DESCS_ = ABSOLUTE (.)
  *(.xt_except_desc)
  *(.gnu.linkonce.h.*)
-                0x3fff1594                __XT_EXCEPTION_DESCS_END__ = ABSOLUTE (.)
+                0x3fff15d8                __XT_EXCEPTION_DESCS_END__ = ABSOLUTE (.)
  *(.xt_except_desc_end)
  *(.dynamic)
  *(.gnu.version_d)
-                0x3fff1594                _rodata_end = ABSOLUTE (.)
-                0x3fff1594                _lit4_start = ABSOLUTE (.)
+                0x3fff15d8                _rodata_end = ABSOLUTE (.)
+                0x3fff15d8                _lit4_start = ABSOLUTE (.)
  *(*.lit4)
  *(.lit4.*)
  *(.gnu.linkonce.lit4.*)
-                0x3fff1594                _lit4_end = ABSOLUTE (.)
-                0x3fff1594                . = ALIGN (0x4)
-                0x3fff1594                _heap_start = ABSOLUTE (.)
+                0x3fff15d8                _lit4_end = ABSOLUTE (.)
+                0x3fff15d8                . = ALIGN (0x4)
+                0x3fff15d8                _heap_start = ABSOLUTE (.)
 
-.iram.text      0x40078000     0x2f99
+.iram.text      0x40078000     0x30c1
                 0x40078000                _stext = .
                 0x40078000                _text_start = ABSOLUTE (.)
  *(.literal .text .literal.* .text.* .stub .gnu.warning .gnu.linkonce.literal.* .gnu.linkonce.t.*.literal .gnu.linkonce.t.*)
@@ -543,342 +537,359 @@ END GROUP
  .literal.rtc_clk_xtal_freq_get
                 0x40078470        0x8 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                  0x1c (size before relaxing)
+ .literal.rtc_clk_cpu_freq_get
+                0x40078478       0x14 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                                 0x28 (size before relaxing)
+ .literal.rtc_clk_cpu_freq_value
+                0x4007848c       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                                 0x2c (size before relaxing)
  .literal.rtc_clk_xtal_freq_update
-                0x40078478        0x0 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x400784ac        0x0 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                   0x8 (size before relaxing)
  .literal.rtc_clk_apb_freq_update
-                0x40078478        0x4 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x400784ac        0x4 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                   0x8 (size before relaxing)
  .literal.rtc_clk_cpu_freq_set
-                0x4007847c       0x2c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x400784b0       0x18 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                  0x74 (size before relaxing)
  .literal.rtc_clk_apb_freq_get
-                0x400784a8        0x8 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x400784c8        0x8 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                  0x14 (size before relaxing)
  .literal.rtc_clk_init
-                0x400784b0       0x24 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                                 0x80 (size before relaxing)
+                0x400784d0       0x24 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                                 0x90 (size before relaxing)
  .literal.rtc_clk_cal_internal
-                0x400784d4       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+                0x400784f4       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
                                  0x3c (size before relaxing)
  .literal.rtc_clk_cal_ratio
-                0x400784f4        0x0 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+                0x40078514        0x0 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
                                   0x8 (size before relaxing)
- .literal       0x400784f4        0x8 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
+ .literal       0x40078514        0x8 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
  .text.wdt_reset_cpu0_info_enable
-                0x400784fc       0x27 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
- *fill*         0x40078523        0x1 
+                0x4007851c       0x27 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+ *fill*         0x40078543        0x1 
  .text.wdt_reset_info_dump
-                0x40078524       0xe6 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
- *fill*         0x4007860a        0x2 
+                0x40078544       0xe6 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+ *fill*         0x4007862a        0x2 
  .text.print_flash_info
-                0x4007860c       0xee /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x4007862c       0xee /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0xf2 (size before relaxing)
- *fill*         0x400786fa        0x2 
+ *fill*         0x4007871a        0x2 
  .text.log_invalid_app_partition
-                0x400786fc       0x57 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x4007871c       0x57 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0x5b (size before relaxing)
- *fill*         0x40078753        0x1 
+ *fill*         0x40078773        0x1 
  .text.clock_configure
-                0x40078754       0x6a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078774       0x6a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0x72 (size before relaxing)
- *fill*         0x400787be        0x2 
+ *fill*         0x400787de        0x2 
  .text.uart_console_configure
-                0x400787c0       0x36 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x400787e0       0x36 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0x3a (size before relaxing)
- *fill*         0x400787f6        0x2 
+ *fill*         0x40078816        0x2 
  .text.wdt_reset_check
-                0x400787f8       0xa2 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078818       0xa2 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0xae (size before relaxing)
- *fill*         0x4007889a        0x2 
+ *fill*         0x400788ba        0x2 
  .text.update_flash_config
-                0x4007889c       0x68 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x400788bc       0x68 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
  .text.ota_select_crc
-                0x40078904       0x14 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078924       0x14 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
  .text.ota_select_valid
-                0x40078918       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078938       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0x24 (size before relaxing)
  .text.get_selected_boot_partition
-                0x40078938      0x140 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078958      0x140 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                 0x14c (size before relaxing)
  .text.try_load_partition
-                0x40078a78       0x34 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078a98       0x34 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0x38 (size before relaxing)
  .text.load_boot_image
-                0x40078aac       0xa6 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078acc       0xa6 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0xba (size before relaxing)
- *fill*         0x40078b52        0x2 
+ *fill*         0x40078b72        0x2 
  .text.set_cache_and_start_app
-                0x40078b54       0xcf /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
- *fill*         0x40078c23        0x1 
+                0x40078b74       0xcf /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+ *fill*         0x40078c43        0x1 
  .text.unpack_load_app
-                0x40078c24       0xae /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078c44       0xae /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                  0xb6 (size before relaxing)
- *fill*         0x40078cd2        0x2 
+ *fill*         0x40078cf2        0x2 
  .text.load_partition_table
-                0x40078cd4      0x160 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078cf4      0x160 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                 0x17c (size before relaxing)
-                0x40078cd4                load_partition_table
+                0x40078cf4                load_partition_table
  .text.bootloader_main
-                0x40078e34      0x107 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078e54      0x107 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                 0x143 (size before relaxing)
-                0x40078e34                bootloader_main
- *fill*         0x40078f3b        0x1 
- .text.__assert_func
-                0x40078f3c       0x1f /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
-                                 0x23 (size before relaxing)
-                0x40078f3c                __assert_func
+                0x40078e54                bootloader_main
  *fill*         0x40078f5b        0x1 
+ .text.__assert_func
+                0x40078f5c       0x1f /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                                 0x23 (size before relaxing)
+                0x40078f5c                __assert_func
+ *fill*         0x40078f7b        0x1 
  .text.call_start_cpu0
-                0x40078f5c      0x124 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+                0x40078f7c      0x124 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                 0x130 (size before relaxing)
-                0x40078f5c                call_start_cpu0
+                0x40078f7c                call_start_cpu0
  .text.spi_to_esp_err
-                0x40079080       0x22 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
- *fill*         0x400790a2        0x2 
+                0x400790a0       0x22 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
+ *fill*         0x400790c2        0x2 
  .text.bootloader_flash_read_allow_decrypt
-                0x400790a4       0x97 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
+                0x400790c4       0x97 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
                                  0x9b (size before relaxing)
- *fill*         0x4007913b        0x1 
+ *fill*         0x4007915b        0x1 
  .text.bootloader_flash_read_no_decrypt
-                0x4007913c       0x32 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
+                0x4007915c       0x32 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
                                  0x36 (size before relaxing)
- *fill*         0x4007916e        0x2 
+ *fill*         0x4007918e        0x2 
  .text.bootloader_mmap
-                0x40079170       0xb1 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
+                0x40079190       0xb1 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
                                  0xb9 (size before relaxing)
-                0x40079170                bootloader_mmap
- *fill*         0x40079221        0x3 
+                0x40079190                bootloader_mmap
+ *fill*         0x40079241        0x3 
  .text.bootloader_munmap
-                0x40079224       0x36 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
-                0x40079224                bootloader_munmap
- *fill*         0x4007925a        0x2 
+                0x40079244       0x36 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
+                0x40079244                bootloader_munmap
+ *fill*         0x4007927a        0x2 
  .text.bootloader_flash_read
-                0x4007925c       0x86 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
-                0x4007925c                bootloader_flash_read
- *fill*         0x400792e2        0x2 
+                0x4007927c       0x86 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
+                0x4007927c                bootloader_flash_read
+ *fill*         0x40079302        0x2 
  .text.esp_partition_table_basic_verify
-                0x400792e4       0xb1 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(flash_partitions.o)
+                0x40079304       0xb1 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(flash_partitions.o)
                                  0xb5 (size before relaxing)
-                0x400792e4                esp_partition_table_basic_verify
- *fill*         0x40079395        0x3 
+                0x40079304                esp_partition_table_basic_verify
+ *fill*         0x400793b5        0x3 
  .text.should_map
-                0x40079398       0x30 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
+                0x400793b8       0x30 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
  .text.verify_image_header
-                0x400793c8       0x7e /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
- *fill*         0x40079446        0x2 
+                0x400793e8       0x7e /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
+ *fill*         0x40079466        0x2 
  .text.verify_segment_header
-                0x40079448       0x71 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
+                0x40079468       0x71 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
                                  0x79 (size before relaxing)
- *fill*         0x400794b9        0x3 
+ *fill*         0x400794d9        0x3 
  .text.verify_checksum
-                0x400794bc       0x87 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
+                0x400794dc       0x87 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
                                  0x8f (size before relaxing)
- *fill*         0x40079543        0x1 
+ *fill*         0x40079563        0x1 
  .text.verify_simple_hash
-                0x40079544       0x5b /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
+                0x40079564       0x5b /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
                                  0x6a (size before relaxing)
- *fill*         0x4007959f        0x1 
+ *fill*         0x400795bf        0x1 
  .text.should_load
-                0x400795a0       0x44 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
+                0x400795c0       0x44 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
                                  0x48 (size before relaxing)
  .text.process_segment
-                0x400795e4      0x1bd /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
+                0x40079604      0x1bd /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
                                 0x1d1 (size before relaxing)
- *fill*         0x400797a1        0x3 
+ *fill*         0x400797c1        0x3 
  .text.esp_image_load
-                0x400797a4      0x24a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
+                0x400797c4      0x24a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
                                 0x262 (size before relaxing)
-                0x400797a4                esp_image_load
- *fill*         0x400799ee        0x2 
+                0x400797c4                esp_image_load
+ *fill*         0x40079a0e        0x2 
  .text.bootloader_sha256_start
-                0x400799f0       0x12 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
-                0x400799f0                bootloader_sha256_start
- *fill*         0x40079a02        0x2 
+                0x40079a10       0x12 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
+                0x40079a10                bootloader_sha256_start
+ *fill*         0x40079a22        0x2 
  .text.bootloader_sha256_data
-                0x40079a04       0xa1 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
+                0x40079a24       0xa1 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
                                  0xa9 (size before relaxing)
-                0x40079a04                bootloader_sha256_data
- *fill*         0x40079aa5        0x3 
+                0x40079a24                bootloader_sha256_data
+ *fill*         0x40079ac5        0x3 
  .text.bootloader_sha256_finish
-                0x40079aa8       0xdc /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
+                0x40079ac8       0xdc /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
                                  0xf0 (size before relaxing)
-                0x40079aa8                bootloader_sha256_finish
+                0x40079ac8                bootloader_sha256_finish
  .text.bootloader_fill_random
-                0x40079b84       0x59 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
-                0x40079b84                bootloader_fill_random
- *fill*         0x40079bdd        0x3 
+                0x40079ba4       0x59 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
+                0x40079ba4                bootloader_fill_random
+ *fill*         0x40079bfd        0x3 
  .text.bootloader_random_enable
-                0x40079be0      0x1d5 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
-                0x40079be0                bootloader_random_enable
- *fill*         0x40079db5        0x3 
+                0x40079c00      0x1d5 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
+                0x40079c00                bootloader_random_enable
+ *fill*         0x40079dd5        0x3 
  .text.bootloader_random_disable
-                0x40079db8      0x11c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
-                0x40079db8                bootloader_random_disable
+                0x40079dd8      0x11c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
+                0x40079dd8                bootloader_random_disable
  .text.esp_log_early_timestamp
-                0x40079ed4       0x14 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
-                0x40079ed4                esp_log_timestamp
-                0x40079ed4                esp_log_early_timestamp
+                0x40079ef4       0x1f /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
+                0x40079ef4                esp_log_timestamp
+                0x40079ef4                esp_log_early_timestamp
+ *fill*         0x40079f13        0x1 
  .text.esp_rom_spiflash_read_status
-                0x40079ee8       0x61 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
-                0x40079ee8                esp_rom_spiflash_read_status
- *fill*         0x40079f49        0x3 
+                0x40079f14       0x61 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+                0x40079f14                esp_rom_spiflash_read_status
+ *fill*         0x40079f75        0x3 
  .text.esp_rom_spiflash_wait_idle
-                0x40079f4c       0x32 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
-                0x40079f4c                esp_rom_spiflash_wait_idle
- *fill*         0x40079f7e        0x2 
+                0x40079f78       0x32 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+                0x40079f78                esp_rom_spiflash_wait_idle
+ *fill*         0x40079faa        0x2 
  .text.esp_rom_spiflash_read_data
-                0x40079f80       0xe2 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
- *fill*         0x4007a062        0x2 
+                0x40079fac       0xe2 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+ *fill*         0x4007a08e        0x2 
  .text.esp_rom_spiflash_read_statushigh
-                0x4007a064       0x21 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
-                0x4007a064                esp_rom_spiflash_read_statushigh
- *fill*         0x4007a085        0x3 
+                0x4007a090       0x21 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+                0x4007a090                esp_rom_spiflash_read_statushigh
+ *fill*         0x4007a0b1        0x3 
  .text.esp_rom_spiflash_write_status
-                0x4007a088       0x34 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+                0x4007a0b4       0x34 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
                                  0x38 (size before relaxing)
-                0x4007a088                esp_rom_spiflash_write_status
+                0x4007a0b4                esp_rom_spiflash_write_status
  .text.esp_rom_spiflash_unlock
-                0x4007a0bc       0x6a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+                0x4007a0e8       0x6a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
                                  0x7e (size before relaxing)
-                0x4007a0bc                esp_rom_spiflash_unlock
- *fill*         0x4007a126        0x2 
+                0x4007a0e8                esp_rom_spiflash_unlock
+ *fill*         0x4007a152        0x2 
  .text.esp_rom_spiflash_read
-                0x4007a128      0x284 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
-                0x4007a128                esp_rom_spiflash_read
+                0x4007a154      0x284 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+                0x4007a154                esp_rom_spiflash_read
  .text.rtc_clk_32k_enable_internal
-                0x4007a3ac       0x81 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- *fill*         0x4007a42d        0x3 
+                0x4007a3d8       0x81 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ *fill*         0x4007a459        0x3 
  .text.rtc_clk_xtal_freq_estimate
-                0x4007a430       0x8a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- *fill*         0x4007a4ba        0x2 
+                0x4007a45c       0x8a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ *fill*         0x4007a4e6        0x2 
  .text.rtc_clk_32k_enable
-                0x4007a4bc       0x2d /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                0x4007a4bc                rtc_clk_32k_enable
- *fill*         0x4007a4e9        0x3 
+                0x4007a4e8       0x2d /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a4e8                rtc_clk_32k_enable
+ *fill*         0x4007a515        0x3 
  .text.rtc_clk_8m_enable
-                0x4007a4ec       0x9d /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                0x4007a4ec                rtc_clk_8m_enable
- *fill*         0x4007a589        0x3 
+                0x4007a518       0x9d /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a518                rtc_clk_8m_enable
+ *fill*         0x4007a5b5        0x3 
  .text.rtc_clk_slow_freq_set
-                0x4007a58c       0x27 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                0x4007a58c                rtc_clk_slow_freq_set
- *fill*         0x4007a5b3        0x1 
+                0x4007a5b8       0x27 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a5b8                rtc_clk_slow_freq_set
+ *fill*         0x4007a5df        0x1 
  .text.rtc_clk_slow_freq_get
-                0x4007a5b4       0x10 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                0x4007a5b4                rtc_clk_slow_freq_get
+                0x4007a5e0       0x10 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a5e0                rtc_clk_slow_freq_get
  .text.rtc_clk_fast_freq_set
-                0x4007a5c4       0x2a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                0x4007a5c4                rtc_clk_fast_freq_set
- *fill*         0x4007a5ee        0x2 
+                0x4007a5f0       0x2a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a5f0                rtc_clk_fast_freq_set
+ *fill*         0x4007a61a        0x2 
  .text.rtc_clk_fast_freq_get
-                0x4007a5f0       0x10 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                0x4007a5f0                rtc_clk_fast_freq_get
+                0x4007a61c       0x10 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a61c                rtc_clk_fast_freq_get
  .text.rtc_clk_bbpll_set
-                0x4007a600      0x154 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a62c      0x154 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                 0x15c (size before relaxing)
-                0x4007a600                rtc_clk_bbpll_set
+                0x4007a62c                rtc_clk_bbpll_set
  .text.rtc_clk_xtal_freq_get
-                0x4007a754       0x38 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a780       0x38 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                  0x3c (size before relaxing)
-                0x4007a754                rtc_get_xtal
-                0x4007a754                rtc_clk_xtal_freq_get
+                0x4007a780                rtc_get_xtal
+                0x4007a780                rtc_clk_xtal_freq_get
+ .text.rtc_clk_cpu_freq_get
+                0x4007a7b8       0x88 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                                 0x94 (size before relaxing)
+                0x4007a7b8                rtc_clk_cpu_freq_get
+ .text.rtc_clk_cpu_freq_value
+                0x4007a840       0x45 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a840                rtc_clk_cpu_freq_value
+ *fill*         0x4007a885        0x3 
  .text.rtc_clk_xtal_freq_update
-                0x4007a78c       0x12 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a888       0x12 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                  0x16 (size before relaxing)
-                0x4007a78c                rtc_clk_xtal_freq_update
- *fill*         0x4007a79e        0x2 
+                0x4007a888                rtc_clk_xtal_freq_update
+ *fill*         0x4007a89a        0x2 
  .text.rtc_clk_apb_freq_update
-                0x4007a7a0       0x13 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a89c       0x13 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                  0x16 (size before relaxing)
-                0x4007a7a0                rtc_clk_apb_freq_update
- *fill*         0x4007a7b3        0x1 
+                0x4007a89c                rtc_clk_apb_freq_update
+ *fill*         0x4007a8af        0x1 
  .text.rtc_clk_cpu_freq_set
-                0x4007a7b4      0x1b4 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007a8b0      0x1b4 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
                                 0x1c4 (size before relaxing)
-                0x4007a7b4                rtc_clk_cpu_freq_set
+                0x4007a8b0                rtc_clk_cpu_freq_set
  .text.rtc_clk_apb_freq_get
-                0x4007a968       0x2a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                0x4007a968                rtc_clk_apb_freq_get
- *fill*         0x4007a992        0x2 
+                0x4007aa64       0x2a /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007aa64                rtc_clk_apb_freq_get
+ *fill*         0x4007aa8e        0x2 
  .text.rtc_clk_init
-                0x4007a994      0x156 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                                0x186 (size before relaxing)
-                0x4007a994                rtc_clk_init
- *fill*         0x4007aaea        0x2 
+                0x4007aa90      0x182 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                                0x1ba (size before relaxing)
+                0x4007aa90                rtc_clk_init
+ *fill*         0x4007ac12        0x2 
  .text.rtc_clk_cal_internal
-                0x4007aaec      0x161 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
- *fill*         0x4007ac4d        0x3 
+                0x4007ac14      0x161 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+ *fill*         0x4007ad75        0x3 
  .text.rtc_clk_cal_ratio
-                0x4007ac50       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+                0x4007ad78       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
                                  0x24 (size before relaxing)
-                0x4007ac50                rtc_clk_cal_ratio
- .text          0x4007ac70       0x26 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
-                0x4007ac70                __bswapsi2
- *fill*         0x4007ac96        0x2 
+                0x4007ad78                rtc_clk_cal_ratio
+ .text          0x4007ad98       0x26 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
+                0x4007ad98                __bswapsi2
+ *fill*         0x4007adbe        0x2 
  .text.index_to_partition
-                0x4007ac98       0x48 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
- *fill*         0x4007ace0        0x0 
+                0x4007adc0       0x48 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
+ *fill*         0x4007ae08        0x0 
  .text.clk_val_is_valid
-                0x4007ace0       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007ae08       0x20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .text.reg_val_to_clk_val
-                0x4007ad00        0x8 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                0x4007ae28        0x8 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
  .text.clk_val_to_reg_val
-                0x4007ad08        0xe /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x0 
- *fill*         0x4007ad16        0x2 
- .text          0x4007ad18      0x281 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
-                0x4007ad18                __udivdi3
+                0x4007ae30        0xe /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x0 
+ *fill*         0x4007ae3e        0x2 
+ .text          0x4007ae40      0x281 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
+                0x4007ae40                __udivdi3
  *(.iram1 .iram1.*)
  *(.fini.literal)
  *(.fini)
  *(.gnu.version)
-                0x4007af99                _text_end = ABSOLUTE (.)
-                0x4007af99                _etext = .
+                0x4007b0c1                _text_end = ABSOLUTE (.)
+                0x4007b0c1                _etext = .
                 [!provide]                PROVIDE (abort, 0x4000bba4)
                 [!provide]                PROVIDE (__absvdi2, 0x4006387c)
                 [!provide]                PROVIDE (__absvsi2, 0x40063868)
@@ -2345,7 +2356,7 @@ END GROUP
                 [!provide]                PROVIDE (xthal_set_ccompare, 0x4000c058)
                 [!provide]                PROVIDE (xthal_set_intclear, 0x4000c1ec)
                 [!provide]                PROVIDE (_xtos_set_intlevel, 0x4000bfdc)
-                [!provide]                PROVIDE (g_ticks_per_us_pro, 0x3ffe01e0)
+                0x3ffe01e0                PROVIDE (g_ticks_per_us_pro, 0x3ffe01e0)
                 [!provide]                PROVIDE (g_ticks_per_us_app, 0x3ffe40f0)
                 0x40063238                PROVIDE (esp_rom_spiflash_config_param, 0x40063238)
                 0x400621b0                PROVIDE (esp_rom_spiflash_read_user_cmd, 0x400621b0)
@@ -2716,47 +2727,47 @@ OUTPUT(/home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader.elf 
  .debug_frame   0x00000a18       0x28 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
  .debug_frame   0x00000a40       0x28 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
 
-.debug_info     0x00000000     0x7e1a
+.debug_info     0x00000000     0x7efb
  .debug_info    0x00000000     0x2714 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
  .debug_info    0x00002714      0xc05 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
  .debug_info    0x00003319      0x381 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(flash_partitions.o)
  .debug_info    0x0000369a     0x11e9 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
  .debug_info    0x00004883      0x44d /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
  .debug_info    0x00004cd0      0x278 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
- .debug_info    0x00004f48      0x8b2 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
- .debug_info    0x000057fa      0xaf5 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
- .debug_info    0x000062ef     0x1133 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .debug_info    0x00007422      0x363 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
- .debug_info    0x00007785       0xcd /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
- .debug_info    0x00007852      0x5c8 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
+ .debug_info    0x00004f48      0x900 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
+ .debug_info    0x00005848      0xaf5 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+ .debug_info    0x0000633d     0x11c6 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ .debug_info    0x00007503      0x363 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+ .debug_info    0x00007866       0xcd /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
+ .debug_info    0x00007933      0x5c8 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
 
-.debug_abbrev   0x00000000     0x17df
+.debug_abbrev   0x00000000     0x180d
  .debug_abbrev  0x00000000      0x49e /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
  .debug_abbrev  0x0000049e      0x22f /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
  .debug_abbrev  0x000006cd      0x16c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(flash_partitions.o)
  .debug_abbrev  0x00000839      0x2a4 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
  .debug_abbrev  0x00000add      0x17d /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
  .debug_abbrev  0x00000c5a      0x126 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
- .debug_abbrev  0x00000d80      0x1c5 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
- .debug_abbrev  0x00000f45      0x22e /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
- .debug_abbrev  0x00001173      0x34b /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .debug_abbrev  0x000014be      0x162 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
- .debug_abbrev  0x00001620       0x60 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
- .debug_abbrev  0x00001680      0x15f /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
+ .debug_abbrev  0x00000d80      0x1f3 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
+ .debug_abbrev  0x00000f73      0x22e /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+ .debug_abbrev  0x000011a1      0x34b /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ .debug_abbrev  0x000014ec      0x162 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+ .debug_abbrev  0x0000164e       0x60 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
+ .debug_abbrev  0x000016ae      0x15f /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
 
-.debug_loc      0x00000000     0x4603
+.debug_loc      0x00000000     0x47a6
  .debug_loc     0x00000000      0xff3 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
  .debug_loc     0x00000ff3      0x638 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
  .debug_loc     0x0000162b      0x116 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(flash_partitions.o)
  .debug_loc     0x00001741      0xae1 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(esp_image_format.o)
  .debug_loc     0x00002222      0x135 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_sha.o)
  .debug_loc     0x00002357       0x91 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
- .debug_loc     0x000023e8      0x369 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
- .debug_loc     0x00002751      0xa20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
- .debug_loc     0x00003171      0x8bf /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .debug_loc     0x00003a30      0x1ca /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
- .debug_loc     0x00003bfa       0x21 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
- .debug_loc     0x00003c1b      0x9e8 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
+ .debug_loc     0x000023e8      0x4ad /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
+ .debug_loc     0x00002895      0xa20 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+ .debug_loc     0x000032b5      0x91e /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ .debug_loc     0x00003bd3      0x1ca /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+ .debug_loc     0x00003d9d       0x21 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
+ .debug_loc     0x00003dbe      0x9e8 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
 
 .debug_aranges  0x00000000      0x458
  .debug_aranges
@@ -2797,7 +2808,7 @@ OUTPUT(/home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader.elf 
  .debug_ranges  0x000003b8       0x38 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
  .debug_ranges  0x000003f0       0x60 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
 
-.debug_line     0x00000000     0x4880
+.debug_line     0x00000000     0x4898
  .debug_line    0x00000000      0xe37 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
  .debug_line    0x00000e37      0x59b /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
  .debug_line    0x000013d2      0x2f2 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(flash_partitions.o)
@@ -2806,12 +2817,12 @@ OUTPUT(/home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader.elf 
  .debug_line    0x000024e0      0x3a4 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
  .debug_line    0x00002884      0x500 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
  .debug_line    0x00002d84      0xae4 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
- .debug_line    0x00003868      0xa9c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
- .debug_line    0x00004304      0x365 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
- .debug_line    0x00004669       0x89 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
- .debug_line    0x000046f2      0x18e /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
+ .debug_line    0x00003868      0xab4 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+ .debug_line    0x0000431c      0x365 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+ .debug_line    0x00004681       0x89 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
+ .debug_line    0x0000470a      0x18e /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
 
-.debug_str      0x00000000     0x23e7
+.debug_str      0x00000000     0x242d
  .debug_str     0x00000000      0xee3 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/main/libmain.a(bootloader_start.o)
                                 0xfc1 (size before relaxing)
  .debug_str     0x00000ee3      0x27c /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_flash.o)
@@ -2824,17 +2835,17 @@ OUTPUT(/home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader.elf 
                                 0x2d4 (size before relaxing)
  .debug_str     0x000015c0       0x77 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/bootloader_support/libbootloader_support.a(bootloader_random.o)
                                 0x24d (size before relaxing)
- .debug_str     0x00001637      0x191 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
-                                0x35a (size before relaxing)
- .debug_str     0x000017c8      0x4a8 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
+ .debug_str     0x00001637      0x1a5 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/log/liblog.a(log.o)
+                                0x36e (size before relaxing)
+ .debug_str     0x000017dc      0x4a8 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/spi_flash/libspi_flash.a(spi_flash_rom_patch.o)
                                 0x76b (size before relaxing)
- .debug_str     0x00001c70      0x434 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
-                                0x824 (size before relaxing)
- .debug_str     0x000020a4      0x12f /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
+ .debug_str     0x00001c84      0x466 /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_clk.o)
+                                0x856 (size before relaxing)
+ .debug_str     0x000020ea      0x12f /home/qichuan/workspace/esp32-cam-ov7670/build/bootloader/soc/libsoc.a(rtc_time.o)
                                 0x36a (size before relaxing)
- .debug_str     0x000021d3      0x138 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
+ .debug_str     0x00002219      0x138 /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_bswapsi2.o)
                                 0x1de (size before relaxing)
- .debug_str     0x0000230b       0xdc /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
+ .debug_str     0x00002351       0xdc /home/qichuan/workspace/xtensa-esp32-elf/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/libgcc.a(_udivdi3.o)
                                 0x258 (size before relaxing)
 
 .comment        0x00000000       0x3a

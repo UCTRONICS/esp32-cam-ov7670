@@ -34,6 +34,7 @@ bt.o: /home/qichuan/workspace/esp-idf/components/bt/./bt.c \
  /home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h \
  /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/soc.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_assert.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/esp_attr.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/FreeRTOS.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/FreeRTOSConfig.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/xtensa_config.h \
@@ -57,7 +58,6 @@ bt.o: /home/qichuan/workspace/esp-idf/components/bt/./bt.c \
  /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_crosscore_int.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h \
- /home/qichuan/workspace/esp-idf/components/esp32/include/esp_attr.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/mpu_wrappers.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_system.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_sleep.h \
@@ -159,6 +159,8 @@ bt.o: /home/qichuan/workspace/esp-idf/components/bt/./bt.c \
 
 /home/qichuan/workspace/esp-idf/components/esp32/include/esp_assert.h:
 
+/home/qichuan/workspace/esp-idf/components/esp32/include/esp_attr.h:
+
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/FreeRTOS.h:
 
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/FreeRTOSConfig.h:
@@ -204,8 +206,6 @@ bt.o: /home/qichuan/workspace/esp-idf/components/bt/./bt.c \
 /home/qichuan/workspace/esp-idf/components/esp32/include/esp_crosscore_int.h:
 
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h:
-
-/home/qichuan/workspace/esp-idf/components/esp32/include/esp_attr.h:
 
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/mpu_wrappers.h:
 

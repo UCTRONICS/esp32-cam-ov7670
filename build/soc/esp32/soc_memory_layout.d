@@ -24,6 +24,7 @@ esp32/soc_memory_layout.o: \
  /home/qichuan/workspace/esp32-cam-ov7670/build/include/sdkconfig.h \
  /home/qichuan/workspace/esp-idf/components/newlib/include/assert.h \
  /home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/esp_attr.h \
  /home/qichuan/workspace/esp-idf/components/heap/include/esp_heap_caps.h \
  /home/qichuan/workspace/esp-idf/components/heap/include/multi_heap.h
 
@@ -74,6 +75,8 @@ esp32/soc_memory_layout.o: \
 /home/qichuan/workspace/esp-idf/components/newlib/include/assert.h:
 
 /home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/esp_attr.h:
 
 /home/qichuan/workspace/esp-idf/components/heap/include/esp_heap_caps.h:
 
