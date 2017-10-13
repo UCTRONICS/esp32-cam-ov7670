@@ -62,6 +62,7 @@ heap_caps.o: \
  /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/specreg.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_crosscore_int.h \
+ /home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/mpu_wrappers.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_system.h \
@@ -82,7 +83,6 @@ heap_caps.o: \
  /home/qichuan/workspace/esp-idf/components/esp32/include/rom/ets_sys.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/xtensa_api.h \
  /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/touch_channel.h \
- /home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/rom/queue.h
 
 /home/qichuan/workspace/esp-idf/components/newlib/include/string.h:
@@ -209,6 +209,8 @@ heap_caps.o: \
 
 /home/qichuan/workspace/esp-idf/components/esp32/include/esp_crosscore_int.h:
 
+/home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h:
+
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h:
 
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/mpu_wrappers.h:
@@ -248,8 +250,6 @@ heap_caps.o: \
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/xtensa_api.h:
 
 /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/touch_channel.h:
-
-/home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h:
 
 /home/qichuan/workspace/esp-idf/components/esp32/include/rom/queue.h:
 /home/qichuan/workspace/esp-idf/components/heap/./heap_caps.c:

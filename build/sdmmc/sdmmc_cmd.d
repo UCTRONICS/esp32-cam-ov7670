@@ -51,8 +51,9 @@ sdmmc_cmd.o: \
  /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/specreg.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_crosscore_int.h \
- /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h \
+ /home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_attr.h \
+ /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/mpu_wrappers.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_system.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_err.h \
@@ -86,8 +87,7 @@ sdmmc_cmd.o: \
  /home/qichuan/workspace/esp-idf/components/newlib/include/sys/param.h \
  /home/qichuan/workspace/esp-idf/components/newlib/include/sys/syslimits.h \
  /home/qichuan/workspace/esp-idf/components/newlib/include/machine/endian.h \
- /home/qichuan/workspace/esp-idf/components/newlib/include/machine/param.h \
- /home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h
+ /home/qichuan/workspace/esp-idf/components/newlib/include/machine/param.h
 
 /home/qichuan/workspace/esp-idf/components/newlib/include/string.h:
 
@@ -191,9 +191,11 @@ sdmmc_cmd.o: \
 
 /home/qichuan/workspace/esp-idf/components/esp32/include/esp_crosscore_int.h:
 
-/home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h:
+/home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h:
 
 /home/qichuan/workspace/esp-idf/components/esp32/include/esp_attr.h:
+
+/home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h:
 
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/mpu_wrappers.h:
 
@@ -262,6 +264,4 @@ sdmmc_cmd.o: \
 /home/qichuan/workspace/esp-idf/components/newlib/include/machine/endian.h:
 
 /home/qichuan/workspace/esp-idf/components/newlib/include/machine/param.h:
-
-/home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h:
 /home/qichuan/workspace/esp-idf/components/sdmmc/./sdmmc_cmd.c:

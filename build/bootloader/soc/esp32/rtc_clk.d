@@ -25,7 +25,13 @@ esp32/rtc_clk.o: \
  /home/qichuan/workspace/esp-idf/components/soc/esp32/i2c_bbpll.h \
  /home/qichuan/workspace/esp-idf/components/soc/esp32/soc_log.h \
  /home/qichuan/workspace/esp-idf/components/log/include/esp_log.h \
- /home/qichuan/workspace/esp-idf/components/log/include/esp_log_internal.h
+ /home/qichuan/workspace/esp-idf/components/log/include/esp_log_internal.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/core-macros.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/core.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/hal.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtensa-versions.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/core-matmap.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/tie.h
 
 /home/qichuan/workspace/esp-idf/components/esp32/include/rom/ets_sys.h:
 
@@ -78,4 +84,16 @@ esp32/rtc_clk.o: \
 /home/qichuan/workspace/esp-idf/components/log/include/esp_log.h:
 
 /home/qichuan/workspace/esp-idf/components/log/include/esp_log_internal.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/core-macros.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/core.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/hal.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtensa-versions.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/core-matmap.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/tie.h:
 /home/qichuan/workspace/esp-idf/components/soc/esp32/rtc_clk.c:

@@ -88,6 +88,9 @@ libcoap/src/net.o: \
  /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/specreg.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_crosscore_int.h \
+ /home/qichuan/workspace/esp-idf/components/heap/include/esp_heap_caps.h \
+ /home/qichuan/workspace/esp-idf/components/heap/include/multi_heap.h \
+ /home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/mpu_wrappers.h \
  /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/task.h \
@@ -309,6 +312,12 @@ libcoap/src/net.o: \
 /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtruntime-core-state.h:
 
 /home/qichuan/workspace/esp-idf/components/esp32/include/esp_crosscore_int.h:
+
+/home/qichuan/workspace/esp-idf/components/heap/include/esp_heap_caps.h:
+
+/home/qichuan/workspace/esp-idf/components/heap/include/multi_heap.h:
+
+/home/qichuan/workspace/esp-idf/components/soc/include/soc/soc_memory_layout.h:
 
 /home/qichuan/workspace/esp-idf/components/freertos/include/freertos/portbenchmark.h:
 

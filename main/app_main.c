@@ -31,7 +31,6 @@
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "soc/spi_reg.h"
-//#include "driver/hspi.h"
 #include "soc/gpio_reg.h"
 #include "esp_attr.h"
 
@@ -48,32 +47,18 @@
 #define WIFI_PASSWORD CONFIG_WIFI_PASSWORD
 #define WIFI_SSID     CONFIG_WIFI_SSID
 #define CAMERA_PIXEL_FORMAT CAMERA_PF_RGB565
-//#define CAMERA_PIXEL_FORMAT CAMERA_PF_YUV422
-//#define CAMERA_FRAME_SIZE CAMERA_FS_QQVGA
-#define CAMERA_FRAME_SIZE CAMERA_FS_HQVGA
+#define CAMERA_FRAME_SIZE CAMERA_FS_QVGA
 static const char* TAG = "ESP-CAM";
 static EventGroupHandle_t espilicam_event_group;
 EventBits_t uxBits;
 const int MOVIEMODE_ON_BIT = BIT0;
 
-bool is_moviemode_on()
-{
-    return (xEventGroupGetBits(espilicam_event_group) & MOVIEMODE_ON_BIT) ? 1 : 0;
-}
-
-static void set_moviemode(bool c) {
-    if (is_moviemode_on() == c) {
-        return;
-    } else {
-      if (c) {
-      xEventGroupSetBits(espilicam_event_group, MOVIEMODE_ON_BIT);
-      } else {
-      xEventGroupClearBits(espilicam_event_group, MOVIEMODE_ON_BIT);
-      }
-    }
-}
-
-// CAMERA CONFIG
+//Warning: This gets squeezed into IRAM.
+volatile static uint32_t *buffFbPtr0 __attribute__ ((aligned(4))) = NULL;
+volatile static uint32_t *buffFbPtr1 __attribute__ ((aligned(4))) = NULL;
+bool get_fb0_done;
+bool get_fb1_done;
+static camera_model_t camera_model;
 static camera_pixelformat_t s_pixel_format;
 static camera_config_t config = {
     .ledc_channel = LEDC_CHANNEL_0,
@@ -96,9 +81,40 @@ static camera_config_t config = {
     .xclk_freq_hz = CONFIG_XCLK_FREQ,
    // .test_pattern_enabled = CONFIG_ENABLE_TEST_PATTERN,
     };
+// camera code
+const static char http_hdr[] = "HTTP/1.1 200 OK\r\n";
+const static char http_stream_hdr[] =
+        "Content-type: multipart/x-mixed-replace; boundary=123456789000000000000987654321\r\n\r\n";
+const static char http_jpg_hdr[] =
+        "Content-type: image/jpg\r\n\r\n";
+const static char http_pgm_hdr[] =
+        "Content-type: image/x-portable-graymap\r\n\r\n";
+const static char http_stream_boundary[] = "--123456789000000000000987654321\r\n";
+const static char http_bitmap_hdr[] =
+        "Content-type: image/bitmap\r\n\r\n";
+const static char http_yuv422_hdr[] =
+        "Content-Disposition: attachment; Content-type: application/octet-stream\r\n\r\n";
 
-static camera_model_t camera_model;
+static EventGroupHandle_t wifi_event_group;
+const int CONNECTED_BIT = BIT0;
+static ip4_addr_t s_ip_addr;
 
+bool is_moviemode_on()
+{
+    return (xEventGroupGetBits(espilicam_event_group) & MOVIEMODE_ON_BIT) ? 1 : 0;
+}
+
+static void set_moviemode(bool c) {
+    if (is_moviemode_on() == c) {
+        return;
+    } else {
+      if (c) {
+      xEventGroupSetBits(espilicam_event_group, MOVIEMODE_ON_BIT);
+      } else {
+      xEventGroupClearBits(espilicam_event_group, MOVIEMODE_ON_BIT);
+      }
+    }
+}
 
 // DISPLAY LOGIC
 static inline uint8_t clamp(int n)
@@ -132,7 +148,6 @@ int r = (a0 + a1) >> 10;
 int g = (a0 - a2 - a3) >> 10;
 int b = (a0 + a4) >> 10;
 return ILI9341_color565(clamp(r),clamp(g),clamp(b));
-
 }
 
 // fast but uses floating points...
@@ -144,31 +159,10 @@ static inline uint16_t fast_pascal_to_565(int Y, int U, int V) {
   return ILI9341_color565(r,g,b);
 }
 
-//Warning: This gets squeezed into IRAM.
-volatile static uint32_t *currFbPtr __attribute__ ((aligned(4))) = NULL;
-
 inline uint8_t unpack(int byteNumber, uint32_t value) {
     return (value >> (byteNumber * 8));
 }
 
-// camera code
-
-const static char http_hdr[] = "HTTP/1.1 200 OK\r\n";
-const static char http_stream_hdr[] =
-        "Content-type: multipart/x-mixed-replace; boundary=123456789000000000000987654321\r\n\r\n";
-const static char http_jpg_hdr[] =
-        "Content-type: image/jpg\r\n\r\n";
-const static char http_pgm_hdr[] =
-        "Content-type: image/x-portable-graymap\r\n\r\n";
-const static char http_stream_boundary[] = "--123456789000000000000987654321\r\n";
-const static char http_bitmap_hdr[] =
-        "Content-type: image/bitmap\r\n\r\n";
-const static char http_yuv422_hdr[] =
-        "Content-Disposition: attachment; Content-type: application/octet-stream\r\n\r\n";
-
-static EventGroupHandle_t wifi_event_group;
-const int CONNECTED_BIT = BIT0;
-static ip4_addr_t s_ip_addr;
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -233,7 +227,7 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
   uint32_t long2px = 0;
   uint16_t *sptr;
   int current_src_pos = 0, current_dest_pos = 0;
-  for ( int current_pixel_pos = 0; current_pixel_pos < 240; current_pixel_pos += 2 )
+  for ( int current_pixel_pos = 0; current_pixel_pos < 320; current_pixel_pos += 2 )
   {
     current_src_pos = current_pixel_pos / 2;
     long2px = srcline[current_src_pos];
@@ -322,6 +316,7 @@ static void http_server_netconn_serve(struct netconn *conn)
             netconn_write(conn, http_hdr, sizeof(http_hdr) - 1,NETCONN_NOCOPY);
             //check if a stream is requested.
             if (buf[5] == 's') {
+
                 printf("00\n");
                 //Send mjpeg stream header
                 err = netconn_write(conn, http_stream_hdr, sizeof(http_stream_hdr) - 1,NETCONN_NOCOPY);
@@ -351,17 +346,35 @@ static void http_server_netconn_serve(struct netconn *conn)
                             // only rgb and yuv...
                             uint8_t s_line[240*2];
                             uint32_t *fbl;
-                            for (int i = 0; i < 160; i++) {
-                                fbl = &currFbPtr[(i*240)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                                convert_fb32bit_line_to_bmp565(fbl, s_line,s_pixel_format);
-                                err = netconn_write(conn, s_line, 240*2,NETCONN_COPY);
+                            char get_fb_count = 0;
+                            while(get_fb_count > 6){
+                                get_fb0_done = camera_get_fb0_done();
+                                get_fb1_done = camera_get_fb1_done();
+                                if(get_fb0_done){
+                                    for (int i = 0; i < 40; i++) {
+                                        printf("sending %d\n", get_fb_count);
+                                        fbl = &buffFbPtr0[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                                        convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
+                                        err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
+                                    }
+                                    get_fb_count++;
+                                }
+                                if(get_fb1_done){
+                                    for (int i = 0; i < 40; i++) {
+                                        printf("sending %d\n", get_fb_count);
+                                        fbl = &buffFbPtr1[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                                        convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
+                                        err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
+                                    }
+                                    get_fb_count++;
+                                }
                             }
                         }else {
                             printf("03\n");
                             // stream jpeg
                             err = netconn_write(conn, http_jpg_hdr, sizeof(http_jpg_hdr) - 1,NETCONN_NOCOPY);
                             if(err == ERR_OK)
-                                err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_COPY);
+                                err = netconn_write(conn, camera_get_fb0(), camera_get_data_size(),NETCONN_COPY);
                         }
                         if(err == ERR_OK){
                             //Send boundary to next jpeg
@@ -451,20 +464,39 @@ static void http_server_netconn_serve(struct netconn *conn)
                     ESP_LOGD(TAG, "Camera capture failed with error = %d", err);
                 } else {
                     ESP_LOGD(TAG, "Done");
+
                     //Send jpeg
                     if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
                         ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
-                        uint8_t s_line[240*2];
+                        uint8_t s_line[320*2];
                         uint32_t *fbl;
-                        for (int i = 0; i < 160; i++) {
-                            printf("sending %d\n", i);
-                            fbl = &currFbPtr[(i*240)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                            convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                            err = netconn_write(conn, s_line, 240*2, NETCONN_COPY);
+                        char get_fb_count = 0;
+                        while(get_fb_count < 6){
+                            get_fb0_done = camera_get_fb0_done();
+                            get_fb1_done = camera_get_fb1_done();
+                            //ESP_LOGD(TAG, "Camera sending bytes: %d", );
+                            if(get_fb0_done){
+                                printf("get_fb0_done and sending %d\n", get_fb_count);
+                                for (int i = 0; i < 40; i++) {
+                                    fbl = &buffFbPtr0[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                                    convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
+                                    err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
+                                }
+                                get_fb_count++;
+                            }
+                            if(get_fb1_done){
+                                printf("get_fb1_done and sending %d\n", get_fb_count);
+                                for (int i = 0; i < 40; i++) {
+                                    printf("sending %d\n", get_fb_count);
+                                    fbl = &buffFbPtr1[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                                    convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
+                                    err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
+                                }
+                                get_fb_count++;
+                            }
                         }
-                        //    ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
                     } else
-                        err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_NOCOPY);
+                        err = netconn_write(conn, camera_get_fb0(), camera_get_data_size(),NETCONN_NOCOPY);
                 } // handle .bmp and std gets...
             }// end GET request:
         set_moviemode(s_moviemode);
@@ -543,12 +575,13 @@ static void http_server(void *pvParameters)
 
 void app_main()
 {
-
+    //malloc two buff, buffFbPtr0 and buffFbPtr1
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
-    currFbPtr = heap_caps_malloc(240*160*2, MALLOC_CAP_32BIT);
-
-    ESP_LOGI(TAG,"%s\n",currFbPtr == NULL ? "currFbPtr is NULL" : "currFbPtr not NULL" );
-
+    buffFbPtr0 = heap_caps_malloc(320*40*2, MALLOC_CAP_32BIT);
+    buffFbPtr1 = heap_caps_malloc(320*40*2, MALLOC_CAP_32BIT);
+    ESP_LOGI(TAG,"%s\n",buffFbPtr0 == NULL ? "buffFbPtr0 is NULL" : "buffFbPtr0 not NULL" );
+    ESP_LOGI(TAG,"%s\n",buffFbPtr1 == NULL ? "buffFbPtr1 is NULL" : "buffFbPtr1 not NULL" );
+   
     ESP_LOGI(TAG,"Starting nvs_flash_init ...");
     nvs_flash_init();
 
@@ -589,7 +622,8 @@ void app_main()
     }
 
     espilicam_event_group = xEventGroupCreate();
-    config.displayBuffer = currFbPtr;
+    config.fbBuffer0 = buffFbPtr0;
+    config.fbBuffer1 = buffFbPtr1;
     config.pixel_format = s_pixel_format;
 
     err = camera_init(&config);
@@ -599,7 +633,6 @@ void app_main()
     }
 
     vTaskDelay(2000 / portTICK_RATE_MS);
-
     ESP_LOGD(TAG, "Starting http_server task...");
     // keep an eye on stack... 5784 min with 8048 stck size last count..
     xTaskCreatePinnedToCore(&http_server, "http_server", 4096, NULL, 5, NULL,1);

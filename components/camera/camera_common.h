@@ -52,7 +52,8 @@ typedef void (*dma_filter_t)(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t*
 typedef struct {
     camera_config_t config;
     sensor_t sensor;
-    uint32_t *fb;
+    uint32_t *fb0;
+    uint32_t *fb1;
     size_t fb_size;
     size_t data_size;
     size_t width;
@@ -62,21 +63,23 @@ typedef struct {
     size_t stride;
     size_t frame_count;
 
-    lldesc_t *dma_desc;               //pointer to array of DMA descriptors
-    dma_elem_t **dma_buf;             //pointer to DMA element
+    lldesc_t *dma_desc;
+    dma_elem_t **dma_buf;
     bool dma_done;
-    size_t dma_desc_count;            //count of DMA descriptors
-    size_t dma_desc_cur;              //current DMA descriptors
-    size_t dma_received_count;        // received DMA count
-    size_t dma_filtered_count;        //filtered count of DMA
-    size_t dma_per_line;              //DMA element of per line
-    size_t dma_buf_width;             // buffer width of DMA
-    size_t dma_sample_count;          //count of DMA sample
+    bool fb0_done;
+    bool fb1_done;
+    size_t dma_desc_count;
+    size_t dma_desc_cur;
+    size_t dma_received_count;
+    size_t dma_filtered_count;
+    size_t dma_per_line;
+    size_t dma_buf_width;
+    size_t dma_sample_count;
     i2s_sampling_mode_t sampling_mode;
-    dma_filter_t dma_filter;          //pointer of function DMA filter
+    dma_filter_t dma_filter;
     intr_handle_t i2s_intr_handle;
     intr_handle_t vsync_intr_handle;
     QueueHandle_t data_ready;
     SemaphoreHandle_t frame_ready;
-    TaskHandle_t dma_filter_task;     //DMA filter task
+    TaskHandle_t dma_filter_task;
 } camera_state_t;

@@ -42,7 +42,13 @@ clk.o: /home/qichuan/workspace/esp-idf/components/esp32/./clk.c \
  /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/dport_reg.h \
  /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/dport_access.h \
  /home/qichuan/workspace/esp-idf/components/esp32/include/esp_dport_access.h \
- /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/i2s_reg.h
+ /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/i2s_reg.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/core-macros.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/core.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/hal.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtensa-versions.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/core-matmap.h \
+ /home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/tie.h
 
 /home/qichuan/workspace/esp-idf/components/newlib/include/stdint.h:
 
@@ -131,4 +137,16 @@ clk.o: /home/qichuan/workspace/esp-idf/components/esp32/./clk.c \
 /home/qichuan/workspace/esp-idf/components/esp32/include/esp_dport_access.h:
 
 /home/qichuan/workspace/esp-idf/components/soc/esp32/include/soc/i2s_reg.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/core-macros.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/core.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/hal.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/xtensa-versions.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/core-matmap.h:
+
+/home/qichuan/workspace/esp-idf/components/esp32/include/xtensa/config/tie.h:
 /home/qichuan/workspace/esp-idf/components/esp32/./clk.c:

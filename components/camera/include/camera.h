@@ -77,8 +77,9 @@ typedef struct {
     int jpeg_quality;
     bool test_pattern_enabled;
 
-    uint32_t* displayBuffer;
-
+    //uint32_t* displayBuffer;
+    uint32_t* fbBuffer0;
+    uint32_t* fbBuffer1;
 
 } camera_config_t;
 
@@ -121,8 +122,10 @@ esp_err_t camera_init(const camera_config_t* config);
  * @return pointer to framebuffer
  */
 //uint8_t* camera_get_fb();
-uint32_t* camera_get_fb();
-
+uint32_t* camera_get_fb0();
+uint32_t* camera_get_fb1();
+bool camera_get_fb0_done();
+bool camera_get_fb1_done();
 /**
  * @brief Return the size of valid data in the framebuffer
  *
