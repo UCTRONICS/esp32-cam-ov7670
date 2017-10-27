@@ -573,15 +573,21 @@ static void http_server(void *pvParameters)
     netconn_delete(conn);
 }
 
+void take_semp_fb0(){
+    xSemaphoreTake(semp_fb0, portMAX_DELAY);
+}
+
 void app_main()
 {
+    give_semp_fb0();
+    take_semp_fb0();
     //malloc two buff, buffFbPtr0 and buffFbPtr1
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
     buffFbPtr0 = heap_caps_malloc(320*40*2, MALLOC_CAP_32BIT);
     buffFbPtr1 = heap_caps_malloc(320*40*2, MALLOC_CAP_32BIT);
     ESP_LOGI(TAG,"%s\n",buffFbPtr0 == NULL ? "buffFbPtr0 is NULL" : "buffFbPtr0 not NULL" );
     ESP_LOGI(TAG,"%s\n",buffFbPtr1 == NULL ? "buffFbPtr1 is NULL" : "buffFbPtr1 not NULL" );
-   
+    
     ESP_LOGI(TAG,"Starting nvs_flash_init ...");
     nvs_flash_init();
 

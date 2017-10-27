@@ -18,10 +18,17 @@
 #include "driver/ledc.h"
 #include "../sensor.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+SemaphoreHandle_t semp_fb0 = NULL;
+SemaphoreHandle_t semp_fb1 = NULL;
+semp_fb0 = xSemaphoreCreateBinary();
+semp_fb1 = xSemaphoreCreateBinary();
+void give_semp_fb0();
 
 typedef enum {
     CAMERA_PF_RGB565 = 0,       //!< RGB, 2 bytes per pixel

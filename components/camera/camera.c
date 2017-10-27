@@ -845,3 +845,7 @@ static void IRAM_ATTR dma_filter_raw(const dma_elem_t* src, lldesc_t* dma_desc, 
         }
     }
 }
+
+void give_semp_fb0(){
+    xSemaphoreGive(semp_fb0);
+}
