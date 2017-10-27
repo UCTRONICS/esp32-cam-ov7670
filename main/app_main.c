@@ -60,6 +60,7 @@ bool get_fb0_done;
 bool get_fb1_done;
 static camera_model_t camera_model;
 static camera_pixelformat_t s_pixel_format;
+static char get_fb_count = 0;
 static camera_config_t config = {
     .ledc_channel = LEDC_CHANNEL_0,
     .ledc_timer = LEDC_TIMER_0,
@@ -260,7 +261,45 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
   }
 }
 
+static void trans_fb0(void *pvParameters){
+    struct netconn *conn;
+    conn = (struct netconn *)pvParameters; 
+    esp_err_t err;
+    while(1){
+        xSemaphoreTake(semp_fb0, portMAX_DELAY);
+        uint32_t *fbl0;
+        uint8_t s_line[320*2];
+        printf("get_fb0_done and sending %d\n", get_fb_count);
+        for (int i = 0; i < 40; i++) {
+            printf("sending %d\n", get_fb_count);
+            fbl0 = &buffFbPtr0[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+            convert_fb32bit_line_to_bmp565(fbl0, s_line, s_pixel_format);
+            err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
+        }
+        get_fb_count++;
+    }
+    vTaskDelete(NULL);
+}
 
+static void trans_fb1(void *pvParameters){
+    struct netconn *conn;
+    conn = (struct netconn *)pvParameters;
+    esp_err_t err;
+    while(1){
+        xSemaphoreTake(semp_fb1, portMAX_DELAY);
+        uint32_t *fbl1;
+        uint8_t s_line[320*2];
+        printf("get_fb1_done and sending %d\n", get_fb_count);
+        for (int i = 0; i < 40; i++) {
+            printf("sending %d\n", get_fb_count);
+            fbl1 = &buffFbPtr1[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+            convert_fb32bit_line_to_bmp565(fbl1, s_line, s_pixel_format);
+            err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
+        }
+        get_fb_count++;
+    }
+    vTaskDelete(NULL);
+}
 // TODO: handle http request while videomode on
 
 static void http_server_netconn_serve(struct netconn *conn)
@@ -468,33 +507,14 @@ static void http_server_netconn_serve(struct netconn *conn)
                     //Send jpeg
                     if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
                         ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
-                        uint8_t s_line[320*2];
-                        uint32_t *fbl;
-                        char get_fb_count = 0;
+                        
+                        xTaskCreatePinnedToCore(trans_fb0, "trans_fb0", 4096, (void*)conn, 5, NULL,1);
+                        xTaskCreatePinnedToCore(trans_fb1, "trans_fb1", 4096, (void*)conn, 5, NULL,1);
+
                         while(get_fb_count < 6){
-                            get_fb0_done = camera_get_fb0_done();
-                            get_fb1_done = camera_get_fb1_done();
-                            //ESP_LOGD(TAG, "Camera sending bytes: %d", );
-                            if(get_fb0_done){
-                                printf("get_fb0_done and sending %d\n", get_fb_count);
-                                for (int i = 0; i < 40; i++) {
-                                    fbl = &buffFbPtr0[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                                    convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                                    err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
-                                }
-                                get_fb_count++;
-                            }
-                            if(get_fb1_done){
-                                printf("get_fb1_done and sending %d\n", get_fb_count);
-                                for (int i = 0; i < 40; i++) {
-                                    printf("sending %d\n", get_fb_count);
-                                    fbl = &buffFbPtr1[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                                    convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                                    err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
-                                }
-                                get_fb_count++;
-                            }
+                    
                         }
+                        get_fb_count =0;
                     } else
                         err = netconn_write(conn, camera_get_fb0(), camera_get_data_size(),NETCONN_NOCOPY);
                 } // handle .bmp and std gets...
@@ -573,14 +593,12 @@ static void http_server(void *pvParameters)
     netconn_delete(conn);
 }
 
-void take_semp_fb0(){
-    xSemaphoreTake(semp_fb0, portMAX_DELAY);
-}
 
 void app_main()
 {
-    give_semp_fb0();
-    take_semp_fb0();
+    semp_fb0 = xSemaphoreCreateBinary();
+    semp_fb1 = xSemaphoreCreateBinary();
+    
     //malloc two buff, buffFbPtr0 and buffFbPtr1
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
     buffFbPtr0 = heap_caps_malloc(320*40*2, MALLOC_CAP_32BIT);

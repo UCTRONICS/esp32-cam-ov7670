@@ -756,8 +756,10 @@ static void IRAM_ATTR dma_filter_task(void *pvParameters) {
     s_state->fb1_done = false;
 
     while (true) {
-        size_t buf_idx;
 
+#if 0
+        size_t buf_idx;
+        uint32_t* pfb;
         //creat in camera init , 16 units ,
         xQueueReceive(s_state->data_ready, &buf_idx, portMAX_DELAY);
         if (buf_idx == SIZE_MAX) {
@@ -766,7 +768,54 @@ static void IRAM_ATTR dma_filter_task(void *pvParameters) {
             ESP_LOGD(TAG, "dma_flt: flt_count=%d ", s_state->dma_filtered_count);
             continue;
         }
+#endif
+        size_t buf_idx;
         uint32_t* pfb;
+        bool ops_fb = false;
+
+        if(ops_fb == false){
+            for (int i = 0; i < 40; ++i)
+            {
+                //creat in camera init , 16 units ,
+                xQueueReceive(s_state->data_ready, &buf_idx, portMAX_DELAY);
+                if (buf_idx == SIZE_MAX) {
+                    s_state->data_size = get_fb_pos();
+                    xSemaphoreGive(s_state->frame_ready);
+                    ESP_LOGD(TAG, "dma_flt: flt_count=%d ", s_state->dma_filtered_count);
+                    break;
+                }
+                pfb = s_state->fb0 + get_fb_pos()/4;
+                const dma_elem_t* buf = s_state->dma_buf[buf_idx];
+                lldesc_t* desc = &s_state->dma_desc[buf_idx];
+                (*s_state->dma_filter)(buf, desc, pfb);
+                s_state->dma_filtered_count++;
+            }
+            //xSemaphoreGive(semp_fb0);
+            ops_fb = true;
+        }
+
+        if(ops_fb == true){
+            for (int i = 0; i < 40; ++i)
+            {
+
+                //creat in camera init , 16 units ,
+                xQueueReceive(s_state->data_ready, &buf_idx, portMAX_DELAY);
+                if (buf_idx == SIZE_MAX) {
+                    s_state->data_size = get_fb_pos();
+                    xSemaphoreGive(s_state->frame_ready);
+                    ESP_LOGD(TAG, "dma_flt: flt_count=%d ", s_state->dma_filtered_count);
+                    break;
+                }
+                pfb = s_state->fb1 + get_fb_pos()/4;
+                const dma_elem_t* buf = s_state->dma_buf[buf_idx];
+                lldesc_t* desc = &s_state->dma_desc[buf_idx];
+                (*s_state->dma_filter)(buf, desc, pfb);
+                s_state->dma_filtered_count++;
+            }
+            xSemaphoreGive(semp_fb1);
+            ops_fb = false;
+        }
+#if 0
         if (s_state->fb0_done == false && s_state->fb1_done == false){
             pfb = s_state->fb0 + get_fb_pos()/4;
         }
@@ -789,18 +838,50 @@ static void IRAM_ATTR dma_filter_task(void *pvParameters) {
             s_state->dma_filtered_count = 0;
             if (s_state->fb0_done == false && s_state->fb1_done == false) {
                 s_state->fb0_done = true;
+                xSemaphoreGive(semp_fb0);
             }
             else if(s_state->fb0_done == true && s_state->fb1_done == false) {
                 s_state->fb0_done = false;
                 s_state->fb1_done = true;
+                xSemaphoreGive(semp_fb1);
             }
             else if(s_state->fb0_done == false && s_state->fb1_done == true) {
                 s_state->fb0_done = true;
                 s_state->fb1_done = false;
+                xSemaphoreGive(semp_fb0);
             }
             else
                 ESP_LOGD(TAG, "frame buffer0 and buffer1 full!!!");
         }
+#endif
+
+#if 0
+        bool ops_fb = false;
+        if(ops_fb == false){
+            for (int i = 0; i < 40; ++i)
+            {
+                pfb = s_state->fb0 + get_fb_pos()/4;
+                const dma_elem_t* buf = s_state->dma_buf[buf_idx];
+                lldesc_t* desc = &s_state->dma_desc[buf_idx];
+                (*s_state->dma_filter)(buf, desc, pfb);
+                s_state->dma_filtered_count++;
+            }
+            xSemaphoreGive(semp_fb0);
+            ops_fb = true;
+        }
+        if(ops_fb == true){
+            for (int i = 0; i < 40; ++i)
+            {
+                pfb = s_state->fb1 + get_fb_pos()/4;
+                const dma_elem_t* buf = s_state->dma_buf[buf_idx];
+                lldesc_t* desc = &s_state->dma_desc[buf_idx];
+                (*s_state->dma_filter)(buf, desc, pfb);
+                s_state->dma_filtered_count++;
+            }
+            xSemaphoreGive(semp_fb1);
+            ops_fb = false;
+        }
+#endif
         ESP_LOGV(TAG, "dma_flt: flt_count=%d ", s_state->dma_filtered_count);
     }
 }
@@ -846,6 +927,3 @@ static void IRAM_ATTR dma_filter_raw(const dma_elem_t* src, lldesc_t* dma_desc, 
     }
 }
 
-void give_semp_fb0(){
-    xSemaphoreGive(semp_fb0);
-}
