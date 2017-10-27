@@ -52,8 +52,7 @@ typedef void (*dma_filter_t)(const dma_elem_t* src, lldesc_t* dma_desc, uint8_t*
 typedef struct {
     camera_config_t config;
     sensor_t sensor;
-    uint32_t *fb0;
-    uint32_t *fb1;
+    uint32_t *fb;
     size_t fb_size;
     size_t data_size;
     size_t width;
@@ -66,8 +65,6 @@ typedef struct {
     lldesc_t *dma_desc;
     dma_elem_t **dma_buf;
     bool dma_done;
-    bool fb0_done;
-    bool fb1_done;
     size_t dma_desc_count;
     size_t dma_desc_cur;
     size_t dma_received_count;

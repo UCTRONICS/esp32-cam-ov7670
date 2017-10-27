@@ -32,6 +32,7 @@
 #include "wiring.h"
 #include "camera.h"
 #include "camera_common.h"
+#include "framebuffer.h"
 #include "xclk.h"
 #if CONFIG_OV2640_SUPPORT
 #include "ov2640.h"
@@ -304,8 +305,8 @@ esp_err_t camera_init(const camera_config_t* config)
       s_state->fb_size = s_state->width * s_state->height * 2;
       s_state->in_bytes_per_pixel = 2;       // camera sends YUV422 (2 bytes)
       s_state->fb_bytes_per_pixel = 2;       // frame buffer stores YUYV
-      s_state->dma_filter = &dma_filter_raw;
-      uint8_t highspeed_sampling_mode = 2;
+      s_state->dma_filter = (dma_filter_t)&dma_filter_raw;
+      uint8_t highspeed_sampling_mode = 0;
       if (highspeed_sampling_mode == 0) {
         ESP_LOGD(TAG, "Sampling mode SM_0A0B_0C0D (0)");
         s_state->sampling_mode = SM_0A0B_0C0D; // sampling mode for ov7670... works well for YUV
@@ -323,23 +324,15 @@ esp_err_t camera_init(const camera_config_t* config)
         goto fail;
     }
 
-    ESP_LOGD(TAG, "Frame buffer (%d bytes)", s_state->fb_size);
-    if (s_state->fb0 == NULL && s_state->fb1 == NULL) {
-        ESP_LOGD(TAG, "Using 32-bit aligned ram shared with display");
+    ESP_LOGD(TAG, "allocating frame buffer (%d bytes)", s_state->fb_size);
 
-        if (config->fbBuffer0 == NULL || config->fbBuffer1 == NULL) {
-            ESP_LOGE(TAG, "fbBuffer0 or fbBuffer1 is null!!");
-            err = ESP_ERR_NO_MEM;
-            goto fail;
-        }
-        s_state->fb0 = (uint32_t*)config->fbBuffer0;
-        s_state->fb1 = (uint32_t*)config->fbBuffer1;
-    }
-    if (s_state->fb0 == NULL || s_state->fb1 == NULL) {
+    //setup segmented framebuffer
+    s_state->fb = ( uint32_t* ) framebuffer_create( s_state->height, s_state->width, s_state->fb_bytes_per_pixel );
+    if(s_state -> fb == NULL){
         ESP_LOGE(TAG, "Failed to allocate frame buffer");
         err = ESP_ERR_NO_MEM;
         goto fail;
-    }
+    }   
     ESP_LOGD(TAG, "Initializing I2S and DMA");
     i2s_init();
     err = dma_desc_init();
@@ -387,11 +380,8 @@ esp_err_t camera_init(const camera_config_t* config)
     return ESP_OK;
 
 fail:
-
-    if (s_state->fb0 != NULL)
-        free(s_state->fb0);
-    if (s_state->fb1 != NULL)
-        free(s_state->fb1);
+    if( s_state->fb != NULL )
+        framebuffer_free( s_state->fb );
     if (s_state->data_ready) {
         vQueueDelete(s_state->data_ready);
     }
@@ -404,32 +394,6 @@ fail:
     dma_desc_deinit();
     ESP_LOGE(TAG, "Init Failed");
     return err;
-}
-
-//modified
-uint32_t* camera_get_fb0() {
-    if (s_state == NULL) {
-        return NULL;
-    }
-    return s_state->fb0;
-}
-
-//add
-uint32_t* camera_get_fb1() {
-    if (s_state == NULL) {
-        return NULL;
-    }
-    return s_state->fb1;
-}
-
-//add
-bool camera_get_fb0_done(){
-    return s_state->fb0_done;
-}
-
-//add
-bool camera_get_fb1_done(){
-    return s_state->fb1_done;
 }
 
 //no modify
@@ -463,10 +427,7 @@ esp_err_t camera_run() {
     }
     struct timeval tv_start;
     gettimeofday(&tv_start, NULL);
-#ifndef _NDEBUG
-    memset(s_state->fb0, 0, 320*40*2);
-    memset(s_state->fb1, 0, 320*40*2);
-#endif 
+
     i2s_run();
 
     ESP_LOGD(TAG, "Waiting for frame");
@@ -717,7 +678,7 @@ static void IRAM_ATTR i2s_isr(void* arg) {
     I2S0.int_clr.val = I2S0.int_raw.val;
     bool need_yield;
     signal_dma_buf_received(&need_yield);
-    ESP_EARLY_LOGV(TAG, "isr, cnt=%d", s_state->dma_received_count);
+    ESP_EARLY_LOGD(TAG, "isr, cnt=%d", s_state->dma_received_count);
     if (s_state->dma_received_count == s_state->height * s_state->dma_per_line) {
         i2s_stop();
     }
@@ -746,14 +707,13 @@ static void IRAM_ATTR gpio_isr(void* arg) {
 //no modify
 //  function: get data_ready signal and handle
 static size_t get_fb_pos() {
-    return s_state->dma_filtered_count * s_state->width *
-            s_state->fb_bytes_per_pixel / s_state->dma_per_line;
+    return s_state->dma_filtered_count * s_state->width / s_state->dma_per_line;
+
 }
 
 //modified
 static void IRAM_ATTR dma_filter_task(void *pvParameters) {
-    s_state->fb0_done = false;
-    s_state->fb1_done = false;
+    fb_context_t fbc_camera;
 
     while (true) {
         size_t buf_idx;
@@ -761,46 +721,21 @@ static void IRAM_ATTR dma_filter_task(void *pvParameters) {
         //creat in camera init , 16 units ,
         xQueueReceive(s_state->data_ready, &buf_idx, portMAX_DELAY);
         if (buf_idx == SIZE_MAX) {
-            s_state->data_size = get_fb_pos();
+
+            s_state->data_size = get_fb_pos() * s_state->fb_bytes_per_pixel;
             xSemaphoreGive(s_state->frame_ready);
             ESP_LOGD(TAG, "dma_flt: flt_count=%d ", s_state->dma_filtered_count);
             continue;
         }
-        uint32_t* pfb;
-        if (s_state->fb0_done == false && s_state->fb1_done == false){
-            pfb = s_state->fb0 + get_fb_pos()/4;
-        }
-        else if(s_state->fb0_done == true && s_state->fb1_done == false){
-            pfb = s_state->fb1 + get_fb_pos()/4;
-        }
-        else if(s_state->fb0_done == false && s_state->fb1_done == true){
-            pfb = s_state->fb0 + get_fb_pos()/4;
-        }
-        else{
-            pfb = NULL;
-            ESP_LOGD(TAG, "frame buffer0 and buffer1 full!!!");
-        }
+
+        uint32_t* pfb  = ( uint32_t* ) framebuffer_pos( &fbc_camera, get_fb_pos() );
+
         const dma_elem_t* buf = s_state->dma_buf[buf_idx];
         lldesc_t* desc = &s_state->dma_desc[buf_idx];
-        (*s_state->dma_filter)(buf, desc, pfb);
+        (*s_state->dma_filter)(buf, desc, (uint8_t *)pfb);
 
         s_state->dma_filtered_count++;
-        if(s_state->dma_filtered_count == 39) {
-            s_state->dma_filtered_count = 0;
-            if (s_state->fb0_done == false && s_state->fb1_done == false) {
-                s_state->fb0_done = true;
-            }
-            else if(s_state->fb0_done == true && s_state->fb1_done == false) {
-                s_state->fb0_done = false;
-                s_state->fb1_done = true;
-            }
-            else if(s_state->fb0_done == false && s_state->fb1_done == true) {
-                s_state->fb0_done = true;
-                s_state->fb1_done = false;
-            }
-            else
-                ESP_LOGD(TAG, "frame buffer0 and buffer1 full!!!");
-        }
+  
         ESP_LOGV(TAG, "dma_flt: flt_count=%d ", s_state->dma_filtered_count);
     }
 }
@@ -825,8 +760,8 @@ static void IRAM_ATTR dma_filter_raw(const dma_elem_t* src, lldesc_t* dma_desc, 
     if (s_state->sampling_mode == SM_0A0B_0C0D) {
         size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
         for (size_t i = 0; i < end; ++i) {
-            dst[0] = pack(src[1].sample1,src[1].sample2,src[0].sample1,src[0].sample2);
-            dst[1] = pack(src[3].sample1,src[3].sample2,src[2].sample1,src[2].sample2);
+            dst[0] = pack(src[0].sample1,src[0].sample2,src[1].sample1,src[1].sample2);
+            dst[1] = pack(src[2].sample1,src[2].sample2,src[3].sample1,src[3].sample2);
             src += 4;
             dst += 2;
         }
@@ -835,13 +770,13 @@ static void IRAM_ATTR dma_filter_raw(const dma_elem_t* src, lldesc_t* dma_desc, 
         size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
         // manually unrolling 4 iterations of the loop here
         for (size_t i = 0; i < end; ++i) {
-            dst[0] = pack(src[3].sample1, src[2].sample1, src[1].sample1, src[0].sample1);
+            dst[0] = pack(src[0].sample1, src[1].sample1, src[2].sample1, src[3].sample1);
             src += 4;
             dst += 1;
         }
         // the final sample of a line in SM_0A0B_0B0C sampling mode needs special handling
         if ((dma_desc->length & 0x7) != 0) {
-        dst[0] = pack(src[2].sample2,src[2].sample1,src[1].sample1,src[0].sample1);
+        dst[0] = pack(src[0].sample2,src[1].sample1,src[2].sample1,src[3].sample1);
         }
     }
 }

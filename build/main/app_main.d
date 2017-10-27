@@ -141,7 +141,8 @@ app_main.o: /home/qichuan/workspace/esp32-cam-ov7670/main/./app_main.c \
  /home/qichuan/workspace/esp-idf/components/lwip/include/lwip/lwip/api.h \
  /home/qichuan/workspace/esp-idf/components/lwip/include/lwip/lwip/netbuf.h \
  /home/qichuan/workspace/esp-idf/components/lwip/include/lwip/lwip/pbuf.h \
- /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/bitmap.h
+ /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/bitmap.h \
+ /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/framebuffer.h
 
 /home/qichuan/workspace/esp-idf/components/newlib/include/stdio.h:
 
@@ -428,4 +429,6 @@ app_main.o: /home/qichuan/workspace/esp32-cam-ov7670/main/./app_main.c \
 /home/qichuan/workspace/esp-idf/components/lwip/include/lwip/lwip/pbuf.h:
 
 /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/bitmap.h:
+
+/home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/framebuffer.h:
 /home/qichuan/workspace/esp32-cam-ov7670/main/./app_main.c:

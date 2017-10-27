@@ -101,6 +101,7 @@ camera.o: \
  /home/qichuan/workspace/esp-idf/components/driver/include/driver/ledc.h \
  /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/../sensor.h \
  /home/qichuan/workspace/esp32-cam-ov7670/components/camera/./camera_common.h \
+ /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/framebuffer.h \
  /home/qichuan/workspace/esp32-cam-ov7670/components/camera/./xclk.h \
  /home/qichuan/workspace/esp32-cam-ov7670/components/camera/./ov7670.h
 
@@ -305,6 +306,8 @@ camera.o: \
 /home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/../sensor.h:
 
 /home/qichuan/workspace/esp32-cam-ov7670/components/camera/./camera_common.h:
+
+/home/qichuan/workspace/esp32-cam-ov7670/components/camera/include/framebuffer.h:
 
 /home/qichuan/workspace/esp32-cam-ov7670/components/camera/./xclk.h:
 

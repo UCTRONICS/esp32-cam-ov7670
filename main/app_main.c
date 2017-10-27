@@ -43,6 +43,7 @@
 #include "lwip/netdb.h"
 #include "lwip/api.h"
 #include "bitmap.h"
+#include "framebuffer.h"
 
 #define WIFI_PASSWORD CONFIG_WIFI_PASSWORD
 #define WIFI_SSID     CONFIG_WIFI_SSID
@@ -54,10 +55,6 @@ EventBits_t uxBits;
 const int MOVIEMODE_ON_BIT = BIT0;
 
 //Warning: This gets squeezed into IRAM.
-volatile static uint32_t *buffFbPtr0 __attribute__ ((aligned(4))) = NULL;
-volatile static uint32_t *buffFbPtr1 __attribute__ ((aligned(4))) = NULL;
-bool get_fb0_done;
-bool get_fb1_done;
 static camera_model_t camera_model;
 static camera_pixelformat_t s_pixel_format;
 static camera_config_t config = {
@@ -220,51 +217,48 @@ uint8_t getHexVal(char c)
      return (uint8_t)(c-'A'+10);
 }
 
-static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline, const camera_pixelformat_t format) {
+void convert_fb32bit_line_to_bmp565( uint32_t *srcline, uint8_t *destline, const int width, const camera_pixelformat_t format ){
 
-  uint16_t pixel565 = 0;
-  uint16_t pixel565_2 = 0;
-  uint32_t long2px = 0;
-  uint16_t *sptr;
-  int current_src_pos = 0, current_dest_pos = 0;
-  for ( int current_pixel_pos = 0; current_pixel_pos < 320; current_pixel_pos += 2 )
-  {
-    current_src_pos = current_pixel_pos / 2;
+   uint16_t pixel565 = 0;
+   uint16_t pixel565_2 = 0;
+   uint32_t long2px = 0;
+   uint16_t *dptr;
+   int current_src_pos = 0;
+   int current_dest_pos = width*2;
+
+   for( int current_pixel_pos = 0; current_pixel_pos < width; current_pixel_pos += 2 )
+   {
+    current_src_pos = current_pixel_pos/2;
     long2px = srcline[current_src_pos];
-    if (format == CAMERA_PF_YUV422) {
+
+      if( format == CAMERA_PF_YUV422 )
+      {
         uint8_t y1, y2, u, v;
         y1 = unpack(0,long2px);
-        v  = unpack(1,long2px);
+         u  = unpack( 1, long2px );;
         y2 = unpack(2,long2px);
-        u  = unpack(3,long2px);
+         v  = unpack( 3, long2px );
 
         pixel565 = fast_yuv_to_rgb565(y1,u,v);
         pixel565_2 = fast_yuv_to_rgb565(y2,u,v);
 
-        sptr = &destline[current_dest_pos];
-        *sptr = pixel565;
-        sptr = &destline[current_dest_pos+2];
-        *sptr = pixel565_2;
-        current_dest_pos += 4;
+      }
+      else if( format == CAMERA_PF_RGB565 )
+      {
+         pixel565   = ( unpack( 0, long2px ) << 8 ) | unpack( 1, long2px );
+         pixel565_2 = ( unpack( 2, long2px ) << 8 ) | unpack( 3, long2px );
+      }
 
-    } else if (format == CAMERA_PF_RGB565) {
-      pixel565 =  (unpack(2,long2px) << 8) | unpack(3,long2px);
-      pixel565_2 = (unpack(0,long2px) << 8) | unpack(1,long2px);
-
-      sptr = &destline[current_dest_pos];
-      *sptr = pixel565;
-      sptr = &destline[current_dest_pos+2];
-      *sptr = pixel565_2;
-      current_dest_pos += 4;
-    }
+      current_dest_pos -= 2;
+      dptr = ( uint16_t * )&destline[current_dest_pos];
+      *dptr = pixel565;
+      current_dest_pos -= 2;
+      dptr = ( uint16_t * )&destline[current_dest_pos];
+      *dptr = pixel565_2;
   }
 }
 
-
-// TODO: handle http request while videomode on
-
-static void http_server_netconn_serve(struct netconn *conn)
-{
+static void http_server_netconn_serve(struct netconn *conn){
     /*  user data buff, it is designed on pbuf
         struct netbuff{
             struct pbuf *p, *ptr;
@@ -286,7 +280,9 @@ static void http_server_netconn_serve(struct netconn *conn)
                   We assume the request (the part we care about) is in one netbuf
     */
     err = netconn_recv(conn, &inbuf);
+    printf("#1\n");
     if (err == ERR_OK) {
+        printf("##1\n");
         /*
             API function: let ptr of netbuf record pbuf data address put in dataptr
             buf:    start address of pbuf
@@ -298,7 +294,7 @@ static void http_server_netconn_serve(struct netconn *conn)
             there are other formats for GET, and we're keeping it very simple )
         */
         if (buflen >= 5 && buf[0] == 'G' && buf[1] == 'E' && buf[2] == 'T' && buf[3] == ' ' && buf[4] == '/') {
-            printf("000\n");
+            printf("###1\n");
             // disable videomode (autocapture) to allow streaming...
             bool s_moviemode = is_moviemode_on();
             set_moviemode(false);
@@ -316,19 +312,17 @@ static void http_server_netconn_serve(struct netconn *conn)
             netconn_write(conn, http_hdr, sizeof(http_hdr) - 1,NETCONN_NOCOPY);
             //check if a stream is requested.
             if (buf[5] == 's') {
-
+                printf("####1\n");
                 printf("00\n");
                 //Send mjpeg stream header
                 err = netconn_write(conn, http_stream_hdr, sizeof(http_stream_hdr) - 1,NETCONN_NOCOPY);
                 ESP_LOGD(TAG, "Stream started.");
-                ESP_LOGD(TAG, "write http_stream hdr  = %d", err);
+
                 //Run while everyhting is ok and connection open.
                 while(err == ERR_OK) {
                     printf("01\n");
                     ESP_LOGD(TAG, "Capture frame");
-                    //PAUSE_DISPLAY = true;
-                    //err = camera_run();
-                    //PAUSE_DISPLAY = false;
+ 
                     if (err != ESP_OK) {
                         ESP_LOGD(TAG, "Camera capture failed with error = %d", err);
                     } else {
@@ -339,47 +333,54 @@ static void http_server_netconn_serve(struct netconn *conn)
                             // write mime boundary start
                             err = netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1,NETCONN_NOCOPY);
                             // write bitmap header
-                            char *bmp = bmp_create_header565(camera_get_fb_width(), camera_get_fb_height());
+                            int width = camera_get_fb_width();
+                            int height = camera_get_fb_height();
+                            int bytes_per_pixel = 2;
+                            char *bmp = bmp_create_header565(width, height);
                             err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_NOCOPY);
                             free(bmp);
                             // convert framebuffer on the fly...
                             // only rgb and yuv...
-                            uint8_t s_line[240*2];
+                            uint8_t *s_line = (uint8_t*)malloc(width*bytes_per_pixel);
                             uint32_t *fbl;
-                            char get_fb_count = 0;
-                            while(get_fb_count > 6){
-                                get_fb0_done = camera_get_fb0_done();
-                                get_fb1_done = camera_get_fb1_done();
-                                if(get_fb0_done){
-                                    for (int i = 0; i < 40; i++) {
-                                        printf("sending %d\n", get_fb_count);
-                                        fbl = &buffFbPtr0[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                                        convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                                        err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
-                                    }
-                                    get_fb_count++;
-                                }
-                                if(get_fb1_done){
-                                    for (int i = 0; i < 40; i++) {
-                                        printf("sending %d\n", get_fb_count);
-                                        fbl = &buffFbPtr1[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                                        convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                                        err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
-                                    }
-                                    get_fb_count++;
-                                }
+                            fb_context_t fbc_http_server;
+                            for( int y = 0; y < height; y++ )
+                            {
+                                int current_pixel_pos = y * width;
+                                fbl = ( uint32_t* )framebuffer_pos( &fbc_http_server, current_pixel_pos );
+ 
+                                convert_fb32bit_line_to_bmp565( fbl, s_line, width, s_pixel_format );
+                                err = netconn_write( conn, s_line, width * bytes_per_pixel, NETCONN_COPY );
                             }
+                            free( s_line );
+ 
                         }else {
                             printf("03\n");
                             // stream jpeg
                             err = netconn_write(conn, http_jpg_hdr, sizeof(http_jpg_hdr) - 1,NETCONN_NOCOPY);
                             if(err == ERR_OK)
-                                err = netconn_write(conn, camera_get_fb0(), camera_get_data_size(),NETCONN_COPY);
+                            {
+                                int size = camera_get_data_size();
+                                int bytes_per_pixel = 2;
+                                int bytes_in_line = camera_get_fb_width() * bytes_per_pixel;
+                                int current_pixel_pos = 0;
+ 
+                                uint32_t *fbl;     // address of current line/row in framebuffer
+                                fb_context_t fbc_http_server;
+ 
+                                while( size > 0 && err == ERR_OK ){
+                                    fbl = ( uint32_t* )framebuffer_pos( &fbc_http_server, current_pixel_pos );
+                                    err = netconn_write( conn, fbl, size % bytes_in_line, NETCONN_COPY );
+                                    current_pixel_pos += bytes_in_line;
+                                    size -= bytes_in_line;
+                                }
+                            }
                         }
                         if(err == ERR_OK){
                             //Send boundary to next jpeg
                             printf("04\n");
-                            err = netconn_write(conn, http_stream_boundary,sizeof(http_stream_boundary) -1, NETCONN_NOCOPY);
+                            err = netconn_write( conn, http_stream_boundary,
+                                          sizeof( http_stream_boundary ) - 1, NETCONN_NOCOPY );
                         }
                         vTaskDelay(30 / portTICK_RATE_MS);
                     }
@@ -387,7 +388,7 @@ static void http_server_netconn_serve(struct netconn *conn)
                 ESP_LOGD(TAG, "Stream ended.");
                 ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
             } else {
-
+                printf("####2\n");
                 //CAMER_PF_JPEG
                 if (s_pixel_format == CAMERA_PF_JPEG) {
                 printf("0\n");
@@ -467,41 +468,66 @@ static void http_server_netconn_serve(struct netconn *conn)
 
                     //Send jpeg
                     if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
-                        ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
-                        uint8_t s_line[320*2];
-                        uint32_t *fbl;
-                        char get_fb_count = 0;
-                        while(get_fb_count < 6){
-                            get_fb0_done = camera_get_fb0_done();
-                            get_fb1_done = camera_get_fb1_done();
-                            //ESP_LOGD(TAG, "Camera sending bytes: %d", );
-                            if(get_fb0_done){
-                                printf("get_fb0_done and sending %d\n", get_fb_count);
-                                for (int i = 0; i < 40; i++) {
-                                    fbl = &buffFbPtr0[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                                    convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                                    err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
-                                }
-                                get_fb_count++;
-                            }
-                            if(get_fb1_done){
-                                printf("get_fb1_done and sending %d\n", get_fb_count);
-                                for (int i = 0; i < 40; i++) {
-                                    printf("sending %d\n", get_fb_count);
-                                    fbl = &buffFbPtr1[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                                    convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                                    err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
-                                }
-                                get_fb_count++;
+                        ESP_LOGD( TAG, "Converting framebuffer to RGB565 requested, sending..." );
+
+                        int width = camera_get_fb_width();
+                        int height = camera_get_fb_height();
+                        int bytes_per_pixel = 2;
+
+                        uint8_t *s_line = ( uint8_t * )malloc( width * bytes_per_pixel );
+                        uint32_t *fbl;     // address of current line/row in framebuffer
+                        fb_context_t fbc_http_server;
+
+                        for( int y = 0; y < height; y++ )
+                        {
+                            int current_pixel_pos = y * width;
+                            fbl = ( uint32_t* )framebuffer_pos( &fbc_http_server, current_pixel_pos );
+
+                            convert_fb32bit_line_to_bmp565( fbl, s_line, width, s_pixel_format );
+                            err = netconn_write( conn, s_line, width * bytes_per_pixel,
+                                          NETCONN_COPY );
+                            if( err != ERR_OK )
+                            {
+                                ESP_LOGD( TAG, "Error on send line %d = 0x%02x", y, err );
+                                break;
                             }
                         }
-                    } else
-                        err = netconn_write(conn, camera_get_fb0(), camera_get_data_size(),NETCONN_NOCOPY);
+                        free( s_line );
+                    } else {
+                        // send jpeg
+                        int size = camera_get_data_size();
+                        int bytes_per_pixel = 2;
+                        int bytes_in_line = camera_get_fb_width() * bytes_per_pixel;
+                        int current_pixel_pos = 0;
+
+                        uint32_t *fbl;     // address of current line/row in framebuffer
+                        fb_context_t fbc_http_server;
+
+                        while( size > 0 && err == ERR_OK ){
+                            fbl = ( uint32_t* )framebuffer_pos( &fbc_http_server, current_pixel_pos );
+
+                            err = netconn_write( conn, fbl, size % bytes_in_line,
+                                          NETCONN_COPY );
+
+                            current_pixel_pos += bytes_in_line;
+                            size -= bytes_in_line;
+
+                            if( err != ERR_OK )
+                            {
+                                ESP_LOGD( TAG, "Error on send line, remains %d bytes = 0x%02x", size, err );
+                                break;
+                            }
+                        }
+                    }
+                        
                 } // handle .bmp and std gets...
+            
             }// end GET request:
         set_moviemode(s_moviemode);
         }
+        printf("###2\n");
     }
+    printf("##2\n");
     netconn_close(conn); /* Close the connection (server closes in HTTP) */
     netbuf_delete(inbuf);/* Delete the buffer (netconn_recv gives us ownership,so we have to make sure to deallocate the buffer) */
 }
@@ -554,16 +580,21 @@ static void http_server(void *pvParameters)
         */
         err = netconn_accept(conn, &newconn);
         if (err == ERR_OK) {    /* new conn is coming */
+            printf("*1\n");
             ert = camera_run();
+            printf("*2\n");
             printf("%s\n",ert == ERR_OK ? "camer run success" : "camera run failed" );
             vTaskDelay(3000 / portTICK_RATE_MS);
+            printf("*3\n");
             http_server_netconn_serve(newconn);
+            printf("*4\n");
             /*
             netconn_delete: if status is connecting, after call this function, do active close.
              , delete newconn struct in the end.
             */
             netconn_delete(newconn);
-        }
+            printf("*5\n");
+        }  
     } while (err == ERR_OK);
     /*
         netconn_close: function is close TCP conn, means that send a FIN package and return.
@@ -575,13 +606,6 @@ static void http_server(void *pvParameters)
 
 void app_main()
 {
-    //malloc two buff, buffFbPtr0 and buffFbPtr1
-    ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
-    buffFbPtr0 = heap_caps_malloc(320*40*2, MALLOC_CAP_32BIT);
-    buffFbPtr1 = heap_caps_malloc(320*40*2, MALLOC_CAP_32BIT);
-    ESP_LOGI(TAG,"%s\n",buffFbPtr0 == NULL ? "buffFbPtr0 is NULL" : "buffFbPtr0 not NULL" );
-    ESP_LOGI(TAG,"%s\n",buffFbPtr1 == NULL ? "buffFbPtr1 is NULL" : "buffFbPtr1 not NULL" );
-   
     ESP_LOGI(TAG,"Starting nvs_flash_init ...");
     nvs_flash_init();
 
@@ -622,8 +646,6 @@ void app_main()
     }
 
     espilicam_event_group = xEventGroupCreate();
-    config.fbBuffer0 = buffFbPtr0;
-    config.fbBuffer1 = buffFbPtr1;
     config.pixel_format = s_pixel_format;
 
     err = camera_init(&config);
