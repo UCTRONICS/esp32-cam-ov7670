@@ -31,7 +31,6 @@
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "soc/spi_reg.h"
-//#include "driver/hspi.h"
 #include "soc/gpio_reg.h"
 #include "esp_attr.h"
 
@@ -39,44 +38,19 @@
 #include "freertos/semphr.h"
 #include "esp_err.h"
 #include "camera.h"
+#include "user_config.h"
 
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/api.h"
 #include "bitmap.h"
 
-
-#define WIFI_PASSWORD CONFIG_WIFI_PASSWORD
-#define WIFI_SSID     CONFIG_WIFI_SSID
-#define CAMERA_PIXEL_FORMAT CAMERA_PF_RGB565
-//#define CAMERA_PIXEL_FORMAT CAMERA_PF_YUV422
-//#define CAMERA_FRAME_SIZE CAMERA_FS_QQVGA
-//#define CAMERA_FRAME_SIZE CAMERA_FS_HQVGA
-#define CAMERA_FRAME_SIZE CAMERA_FS_QVGA
 static const char* TAG = "ESP-CAM";
-static EventGroupHandle_t espilicam_event_group;
-EventBits_t uxBits;
-const int MOVIEMODE_ON_BIT = BIT0;
 
-bool is_moviemode_on()
-{
-    return (xEventGroupGetBits(espilicam_event_group) & MOVIEMODE_ON_BIT) ? 1 : 0;
-}
-
-static void set_moviemode(bool c) {
-    if (is_moviemode_on() == c) {
-        return;
-    } else {
-      if (c) {
-      xEventGroupSetBits(espilicam_event_group, MOVIEMODE_ON_BIT);
-      } else {
-      xEventGroupClearBits(espilicam_event_group, MOVIEMODE_ON_BIT);
-      }
-    }
-}
-
-// CAMERA CONFIG
-static camera_pixelformat_t s_pixel_format;
+// config camera
+static camera_pixelformat_t s_pixel_format = CAMERA_PIXEL_FORMAT;
+static camera_framesize_t s_framesize = CAMERA_FRAME_SIZE;
+static camera_model_t camera_model;
 static camera_config_t config = {
     .ledc_channel = LEDC_CHANNEL_0,
     .ledc_timer = LEDC_TIMER_0,
@@ -97,10 +71,7 @@ static camera_config_t config = {
     .pin_reset = CONFIG_RESET,
     .xclk_freq_hz = CONFIG_XCLK_FREQ,
     //.test_pattern_enabled = CONFIG_ENABLE_TEST_PATTERN,
-    };
-
-static camera_model_t camera_model;
-
+};
 
 // DISPLAY LOGIC
 static inline uint8_t clamp(int n)
@@ -111,13 +82,10 @@ static inline uint8_t clamp(int n)
 
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
 static inline uint16_t ILI9341_color565(uint8_t r, uint8_t g, uint8_t b) {
-  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
 uint16_t get_grayscale_pixel_as_565(uint8_t pix) {
-    // R = (img[n]&248)<<8; // 5 bit cao cua Y
-    // G = (img[n]&252)<<3; // 6 bit cao cua Y
-    // B = (img[n]&248)>>3; // 5 bit cao cua Y
     uint16_t graypixel=((pix&248)<<8)|((pix&252)<<3)|((pix&248)>>3);
     return graypixel;
 
@@ -125,15 +93,16 @@ uint16_t get_grayscale_pixel_as_565(uint8_t pix) {
 
 // integers instead of floating point...
 static inline uint16_t fast_yuv_to_rgb565(int y, int u, int v) {
-int a0 = 1192 * (y - 16);
-int a1 = 1634 * (v - 128);
-int a2 = 832 * (v - 128);
-int a3 = 400 * (u - 128);
-int a4 = 2066 * (u - 128);
-int r = (a0 + a1) >> 10;
-int g = (a0 - a2 - a3) >> 10;
-int b = (a0 + a4) >> 10;
-return ILI9341_color565(clamp(r),clamp(g),clamp(b));
+
+    int a0 = 1192 * (y - 16);
+    int a1 = 1634 * (v - 128);
+    int a2 = 832 * (v - 128);
+    int a3 = 400 * (u - 128);
+    int a4 = 2066 * (u - 128);
+    int r = (a0 + a1) >> 10;
+    int g = (a0 - a2 - a3) >> 10;
+    int b = (a0 + a4) >> 10;
+    return ILI9341_color565(clamp(r),clamp(g),clamp(b));
 
 }
 
@@ -154,19 +123,13 @@ inline uint8_t unpack(int byteNumber, uint32_t value) {
 }
 
 // camera code
-
 const static char http_hdr[] = "HTTP/1.1 200 OK\r\n";
-const static char http_stream_hdr[] =
-        "Content-type: multipart/x-mixed-replace; boundary=123456789000000000000987654321\r\n\r\n";
-const static char http_jpg_hdr[] =
-        "Content-type: image/jpg\r\n\r\n";
-const static char http_pgm_hdr[] =
-        "Content-type: image/x-portable-graymap\r\n\r\n";
+const static char http_stream_hdr[] ="Content-type: multipart/x-mixed-replace; boundary=123456789000000000000987654321\r\n\r\n";
+const static char http_jpg_hdr[] ="Content-type: image/jpg\r\n\r\n";
+const static char http_pgm_hdr[] ="Content-type: image/x-portable-graymap\r\n\r\n";
 const static char http_stream_boundary[] = "--123456789000000000000987654321\r\n";
-const static char http_bitmap_hdr[] =
-        "Content-type: image/bitmap\r\n\r\n";
-const static char http_yuv422_hdr[] =
-        "Content-Disposition: attachment; Content-type: application/octet-stream\r\n\r\n";
+const static char http_bitmap_hdr[] ="Content-type: image/bitmap\r\n\r\n";
+const static char http_yuv422_hdr[] ="Content-Disposition: attachment; Content-type: application/octet-stream\r\n\r\n";
 
 static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
@@ -218,98 +181,83 @@ static void init_wifi(void)
     ESP_LOGI(TAG, "Connected");
 }
 
-
-// COMMAND PARSER
-uint8_t getHexVal(char c)
-{
-   if(c >= '0' && c <= '9')
-     return (uint8_t)(c - '0');
-   else
-     return (uint8_t)(c-'A'+10);
-}
-
 static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline, const camera_pixelformat_t format) {
 
-  uint16_t pixel565 = 0;
-  uint16_t pixel565_2 = 0;
-  uint32_t long2px = 0;
-  uint16_t *sptr;
-  int current_src_pos = 0, current_dest_pos = 0;
-  for ( int current_pixel_pos = 0; current_pixel_pos < 320; current_pixel_pos += 2 )
-  {
-    current_src_pos = current_pixel_pos / 2;
-    long2px = srcline[current_src_pos];
-    if (format == CAMERA_PF_YUV422) {
-        uint8_t y1, y2, u, v;
-        y1 = unpack(0,long2px);
-        v  = unpack(1,long2px);
-        y2 = unpack(2,long2px);
-        u  = unpack(3,long2px);
+    uint16_t pixel565 = 0;
+    uint16_t pixel565_2 = 0;
+    uint32_t long2px = 0;
+    uint16_t *sptr;
+    uint16_t conver_times;
+    uint16_t current_src_pos = 0, current_dest_pos = 0;
 
-        pixel565 = fast_yuv_to_rgb565(y1,u,v);
-        pixel565_2 = fast_yuv_to_rgb565(y2,u,v);
-
-        sptr = &destline[current_dest_pos];
-        *sptr = pixel565;
-        sptr = &destline[current_dest_pos+2];
-        *sptr = pixel565_2;
-        current_dest_pos += 4;
-
-    } else if (format == CAMERA_PF_RGB565) {
-      pixel565 =  (unpack(2,long2px) << 8) | unpack(3,long2px);
-      pixel565_2 = (unpack(0,long2px) << 8) | unpack(1,long2px);
-
-      sptr = &destline[current_dest_pos];
-      *sptr = pixel565;
-      sptr = &destline[current_dest_pos+2];
-      *sptr = pixel565_2;
-      current_dest_pos += 4;
+    switch(s_framesize)
+    {
+        case CAMERA_FS_SVGA:
+            conver_times = 800;
+            break;
+        case CAMERA_FS_VGA:
+            conver_times = 640;
+            break;
+        case CAMERA_FS_QVGA:
+            conver_times = 320;
+            break;
+        case CAMERA_FS_QCIF:
+            conver_times = 176;
+            break;
+        case CAMERA_FS_HQVGA:
+            conver_times = 240;
+            break;
+        case CAMERA_FS_QQVGA:
+            conver_times = 160;
+            break;
+        default:
+            printf("framesize not init\n");
+            break;
     }
-  }
+  
+    //config.frame_size
+    for ( int current_pixel_pos = 0; current_pixel_pos < conver_times; current_pixel_pos += 2 )
+    {
+        current_src_pos = current_pixel_pos / 2;
+        long2px = srcline[current_src_pos];
+        if (format == CAMERA_PF_YUV422) {
+            uint8_t y1, y2, u, v;
+            y1 = unpack(0,long2px);
+            v  = unpack(1,long2px);
+            y2 = unpack(2,long2px);
+            u  = unpack(3,long2px);
+
+            pixel565 = fast_yuv_to_rgb565(y1,u,v);
+            pixel565_2 = fast_yuv_to_rgb565(y2,u,v);
+
+            sptr = &destline[current_dest_pos];
+            *sptr = pixel565;
+            sptr = &destline[current_dest_pos+2];
+            *sptr = pixel565_2;
+            current_dest_pos += 4;
+        } else if (format == CAMERA_PF_RGB565) {
+            pixel565 =  (unpack(2,long2px) << 8) | unpack(3,long2px);
+            pixel565_2 = (unpack(0,long2px) << 8) | unpack(1,long2px);
+
+            sptr = &destline[current_dest_pos];
+            *sptr = pixel565;
+            sptr = &destline[current_dest_pos+2];
+            *sptr = pixel565_2;
+            current_dest_pos += 4;
+        }
+    }
 }
-
-
-// TODO: handle http request while videomode on
 
 static void http_server_netconn_serve(struct netconn *conn)
 {
-    /*  user data buff, it is designed on pbuf
-        struct netbuff{
-            struct pbuf *p, *ptr;
-            struct ip_addr *addr;
-            u16_t port;
-        }
-        netbuf: it is just a header, data storage in the pbuf.
-                p is pointer of the first pbuf struct always,but 
-                ptr maybe point other position. 
-     */
     struct netbuf *inbuf;
     char *buf;
     u16_t buflen;
     err_t err;
-    /*
-    netconn_recv: Read the data from the port, and data recvive from recvmbox, To TCP
-                  ,data in recvmbox is pbuf struct.
-                  blocking if nothing yet there.
-                  We assume the request (the part we care about) is in one netbuf
-    */
     err = netconn_recv(conn, &inbuf);
     if (err == ERR_OK) {
-        /*
-            API function: let ptr of netbuf record pbuf data address put in dataptr
-            buf:    start address of pbuf
-            buflen: data length in the pbuf
-        */
         netbuf_data(inbuf, (void**) &buf, &buflen);
-        /* 
-            Is this an HTTP GET command? (only check the first 5 chars, since
-            there are other formats for GET, and we're keeping it very simple )
-        */
         if (buflen >= 5 && buf[0] == 'G' && buf[1] == 'E' && buf[2] == 'T' && buf[3] == ' ' && buf[4] == '/') {
-            printf("000\n");
-            // disable videomode (autocapture) to allow streaming...
-            bool s_moviemode = is_moviemode_on();
-            set_moviemode(false);
             /* Send the HTTP header
              * subtract 1 from the size, since we dont send the \0 in the string
              * NETCONN_NOCOPY: our data is const static, so no need to copy it
@@ -324,14 +272,12 @@ static void http_server_netconn_serve(struct netconn *conn)
             netconn_write(conn, http_hdr, sizeof(http_hdr) - 1,NETCONN_NOCOPY);
             //check if a stream is requested.
             if (buf[5] == 's') {
-                printf("00\n");
                 //Send mjpeg stream header
                 err = netconn_write(conn, http_stream_hdr, sizeof(http_stream_hdr) - 1,NETCONN_NOCOPY);
                 ESP_LOGD(TAG, "Stream started.");
                 ESP_LOGD(TAG, "write http_stream hdr  = %d", err);
                 //Run while everyhting is ok and connection open.
                 while(err == ERR_OK) {
-                    printf("01\n");
                     ESP_LOGD(TAG, "Capture frame");
                     //PAUSE_DISPLAY = true;
                     //err = camera_run();
@@ -342,7 +288,6 @@ static void http_server_netconn_serve(struct netconn *conn)
                         ESP_LOGD(TAG, "Done");
                         //stream an image..
                         if((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
-                            printf("02\n");
                             // write mime boundary start
                             err = netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1,NETCONN_NOCOPY);
                             // write bitmap header
@@ -351,15 +296,14 @@ static void http_server_netconn_serve(struct netconn *conn)
                             free(bmp);
                             // convert framebuffer on the fly...
                             // only rgb and yuv...
-                            uint8_t s_line[320*2];
+                            uint8_t s_line[640*2];
                             uint32_t *fbl;
-                            for (int i = 0; i < 200; i++) {
-                                fbl = &currFbPtr[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                            for (int i = 0; i < 480; i++) {
+                                fbl = &currFbPtr[(i*640)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
                                 convert_fb32bit_line_to_bmp565(fbl, s_line,s_pixel_format);
-                                err = netconn_write(conn, s_line, 320*2,NETCONN_COPY);
+                                err = netconn_write(conn, s_line, 640*2,NETCONN_COPY);
                             }
                         }else {
-                            printf("03\n");
                             // stream jpeg
                             err = netconn_write(conn, http_jpg_hdr, sizeof(http_jpg_hdr) - 1,NETCONN_NOCOPY);
                             if(err == ERR_OK)
@@ -367,7 +311,6 @@ static void http_server_netconn_serve(struct netconn *conn)
                         }
                         if(err == ERR_OK){
                             //Send boundary to next jpeg
-                            printf("04\n");
                             err = netconn_write(conn, http_stream_boundary,sizeof(http_stream_boundary) -1, NETCONN_NOCOPY);
                         }
                         vTaskDelay(30 / portTICK_RATE_MS);
@@ -379,12 +322,12 @@ static void http_server_netconn_serve(struct netconn *conn)
 
                 //CAMER_PF_JPEG
                 if (s_pixel_format == CAMERA_PF_JPEG) {
-                printf("0\n");
+ 
                     netconn_write(conn, http_jpg_hdr, sizeof(http_jpg_hdr) - 1, NETCONN_NOCOPY);
 
                 //CAMERA_PF_GRAYSCALE
                 } else if (s_pixel_format == CAMERA_PF_GRAYSCALE) {
-                printf("1\n");
+
                     netconn_write(conn, http_pgm_hdr, sizeof(http_pgm_hdr) - 1, NETCONN_NOCOPY);
                     if (memcmp(&buf[5], "pgm", 3) == 0) {
                         char pgm_header[32];
@@ -399,15 +342,13 @@ static void http_server_netconn_serve(struct netconn *conn)
 
                 //CAMERA_PF_RGB565
                 } else if (s_pixel_format == CAMERA_PF_RGB565) {
-                printf("2\n");
+
                     netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1, NETCONN_NOCOPY);
                     if (memcmp(&buf[5], "bmp", 3) == 0) {
-                        printf("2-a\n");
                         char *bmp = bmp_create_header565(camera_get_fb_width(), camera_get_fb_height());
                         err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_COPY);
                         free(bmp);
                     } else {
-                        printf("2-b\n");
                         char outstr[120];
                         get_image_mime_info_str(outstr);
                         netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
@@ -416,9 +357,9 @@ static void http_server_netconn_serve(struct netconn *conn)
 
                 //CAMERA_PF_YUV422
                 } else if (s_pixel_format == CAMERA_PF_YUV422) {
-                printf("3\n");
+
                     if (memcmp(&buf[5], "bmp", 3) == 0) {
-                        printf("a\n");
+     
                         //PAUSE_DISPLAY = true;
                         // send YUV converted to 565 2bpp for now...
                         netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1, NETCONN_NOCOPY);
@@ -426,17 +367,16 @@ static void http_server_netconn_serve(struct netconn *conn)
                         err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_COPY);
                         free(bmp);
                     } else {
-                        printf("b\n");
                         char outstr[120];
                         get_image_mime_info_str(outstr);
                         netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
-                        printf("c\n");
+
                         //netconn_write(conn, http_yuv422_hdr, sizeof(http_yuv422_hdr) - 1, NETCONN_NOCOPY);
                     }
 
                 //other
                 } else {
-                printf("4\n");
+
                     char outstr[120];
                     get_image_mime_info_str(outstr);
                     netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
@@ -445,9 +385,6 @@ static void http_server_netconn_serve(struct netconn *conn)
                 // handle non streaming images (http../get and http:../bmp )
                 ESP_LOGD(TAG, "Image requested.");
                 //ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
-                bool s_moviemode = is_moviemode_on();
-                set_moviemode(false);
-                set_moviemode(s_moviemode);
                 //ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
                 if (err != ESP_OK) {
                     ESP_LOGD(TAG, "Camera capture failed with error = %d", err);
@@ -456,20 +393,19 @@ static void http_server_netconn_serve(struct netconn *conn)
                     //Send jpeg
                     if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
                         ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
-                        uint8_t s_line[320*2];
+                        uint8_t s_line[640*2];
                         uint32_t *fbl;
-                        for (int i = 0; i < 200; i++) {
-                            printf("sending %d\n", i);
-                            fbl = &currFbPtr[(i*320)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                        for (int i = 0; i < 480; i++) {
+                            fbl = &currFbPtr[(i*640)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
                             convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                            err = netconn_write(conn, s_line, 320*2, NETCONN_COPY);
+                            err = netconn_write(conn, s_line, 640*2, NETCONN_COPY);
                         }
+                        printf("frame sending ok\n");
                         //    ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
                     } else
                         err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_NOCOPY);
                 } // handle .bmp and std gets...
             }// end GET request:
-        set_moviemode(s_moviemode);
         }
     }
     netconn_close(conn); /* Close the connection (server closes in HTTP) */
@@ -547,10 +483,11 @@ void app_main()
 {
 
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
-    //currFbPtr = heap_caps_malloc(240*160*2, MALLOC_CAP_32BIT);
-    currFbPtr = heap_caps_malloc(320*200*2, MALLOC_CAP_32BIT);
+    currFbPtr = heap_caps_malloc(640*480*2, MALLOC_CAP_32BIT);
 
     ESP_LOGI(TAG,"%s\n",currFbPtr == NULL ? "currFbPtr is NULL" : "currFbPtr not NULL" );
+    ESP_LOGI(TAG,"framebuffer address is:%p\n",currFbPtr);
+    
 
     ESP_LOGI(TAG,"Starting nvs_flash_init ...");
     nvs_flash_init();
@@ -591,7 +528,6 @@ void app_main()
         return;
     }
 
-    espilicam_event_group = xEventGroupCreate();
     config.displayBuffer = currFbPtr;
     config.pixel_format = s_pixel_format;
 
@@ -604,7 +540,6 @@ void app_main()
     vTaskDelay(2000 / portTICK_RATE_MS);
 
     ESP_LOGD(TAG, "Starting http_server task...");
-    // keep an eye on stack... 5784 min with 8048 stck size last count..
     xTaskCreatePinnedToCore(&http_server, "http_server", 4096, NULL, 5, NULL,1);
 
     ESP_LOGI(TAG, "open http://" IPSTR "/bmp for single image/bitmap image", IP2STR(&s_ip_addr));

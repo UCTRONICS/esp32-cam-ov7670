@@ -33,6 +33,7 @@
 #include "camera.h"
 #include "camera_common.h"
 #include "xclk.h"
+
 #if CONFIG_OV2640_SUPPORT
 #include "ov2640.h"
 #endif
@@ -352,7 +353,8 @@ esp_err_t camera_init(const camera_config_t* config)
         ESP_LOGE(TAG, "Failed to initialize I2S and DMA");
         goto fail;
     }
-    s_state->data_ready = xQueueCreate(16, sizeof(size_t));
+    //16
+    s_state->data_ready = xQueueCreate(24, sizeof(size_t));
     s_state->frame_ready = xSemaphoreCreateBinary();
     if (s_state->data_ready == NULL || s_state->frame_ready == NULL) {
         ESP_LOGE(TAG, "Failed to create semaphores");
@@ -781,30 +783,37 @@ inline uint32_t pack(uint8_t byte0, uint8_t byte1, uint8_t byte2, uint8_t byte3)
 static void IRAM_ATTR dma_filter_raw(const dma_elem_t* src, lldesc_t* dma_desc, uint32_t* dst)
 {
 
-  if (s_state->sampling_mode == SM_0A0B_0C0D) {
-  size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
-  for (size_t i = 0; i < end; ++i) {
-      //dst[0] = pack(0,1,2,3);
-      // ie. reverse->
-      dst[0] = pack(src[1].sample1,src[1].sample2,src[0].sample1,src[0].sample2);
-      dst[1] = pack(src[3].sample1,src[3].sample2,src[2].sample1,src[2].sample2);
-      src += 4;
-      dst += 2;
-  }
-} else {
-  assert(s_state->sampling_mode == SM_0A0B_0B0C ||
-         s_state->sampling_mode == SM_0A00_0B00);
-  size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
-  // manually unrolling 4 iterations of the loop here
-  for (size_t i = 0; i < end; ++i) {
-    dst[0] = pack(src[3].sample1,src[2].sample1,src[1].sample1,src[0].sample1);
-    src += 4;
-    dst += 1;
-  }
-  // the final sample of a line in SM_0A0B_0B0C sampling mode needs special handling
-  if ((dma_desc->length & 0x7) != 0) {
-    dst[0] = pack(src[2].sample2,src[2].sample1,src[1].sample1,src[0].sample1);
-  }
-
+    if (s_state->sampling_mode == SM_0A0B_0C0D) {
+        size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
+        for (size_t i = 0; i < end; ++i) {
+            //dst[0] = pack(0,1,2,3);
+            // ie. reverse->
+            dst[0] = pack(src[1].sample1,src[1].sample2,src[0].sample1,src[0].sample2);
+            dst[1] = pack(src[3].sample1,src[3].sample2,src[2].sample1,src[2].sample2);
+            src += 4;
+            dst += 2;
+        }
+    } else {
+        assert(s_state->sampling_mode == SM_0A0B_0B0C ||
+            s_state->sampling_mode == SM_0A00_0B00);
+        size_t end = dma_desc->length / sizeof(dma_elem_t) / 4;
+        // manually unrolling 4 iterations of the loop here
+        for (size_t i = 0; i < end; ++i) {
+            dst[0] = pack(src[3].sample1,src[2].sample1,src[1].sample1,src[0].sample1);
+            src += 4;
+            dst += 1;
+        }
+        // the final sample of a line in SM_0A0B_0B0C sampling mode needs special handling
+        if ((dma_desc->length & 0x7) != 0) {
+            dst[0] = pack(src[2].sample2,src[2].sample1,src[1].sample1,src[0].sample1);
+        }
+    }
 }
+
+int camera_malloc_()
+{
+    if (s_state == NULL) {
+        return 0;
+    }
+    return s_state->width;
 }
