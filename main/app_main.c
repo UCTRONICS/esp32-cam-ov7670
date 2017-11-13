@@ -73,48 +73,6 @@ static camera_config_t config = {
     //.test_pattern_enabled = CONFIG_ENABLE_TEST_PATTERN,
 };
 
-// DISPLAY LOGIC
-static inline uint8_t clamp(int n)
-{
-    n = n>255 ? 255 : n;
-    return n<0 ? 0 : n;
-}
-
-// Pass 8-bit (each) R,G,B, get back 16-bit packed color
-static inline uint16_t ILI9341_color565(uint8_t r, uint8_t g, uint8_t b) {
-    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-}
-
-uint16_t get_grayscale_pixel_as_565(uint8_t pix) {
-    uint16_t graypixel=((pix&248)<<8)|((pix&252)<<3)|((pix&248)>>3);
-    return graypixel;
-
-}
-
-// integers instead of floating point...
-static inline uint16_t fast_yuv_to_rgb565(int y, int u, int v) {
-
-    int a0 = 1192 * (y - 16);
-    int a1 = 1634 * (v - 128);
-    int a2 = 832 * (v - 128);
-    int a3 = 400 * (u - 128);
-    int a4 = 2066 * (u - 128);
-    int r = (a0 + a1) >> 10;
-    int g = (a0 - a2 - a3) >> 10;
-    int b = (a0 + a4) >> 10;
-    return ILI9341_color565(clamp(r),clamp(g),clamp(b));
-
-}
-
-// fast but uses floating points...
-static inline uint16_t fast_pascal_to_565(int Y, int U, int V) {
-  uint8_t r, g, b;
-  r = clamp(1.164*(Y-16) + 1.596*(V-128));
-  g = clamp(1.164*(Y-16) - 0.392*(U-128) - 0.813*(V-128));
-  b = clamp(1.164*(Y-16) + 2.017*(U-128));
-  return ILI9341_color565(r,g,b);
-}
-
 //Warning: This gets squeezed into IRAM.
 volatile static uint32_t *currFbPtr __attribute__ ((aligned(4))) = NULL;
 
@@ -220,31 +178,16 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
     {
         current_src_pos = current_pixel_pos / 2;
         long2px = srcline[current_src_pos];
-        if (format == CAMERA_PF_YUV422) {
-            uint8_t y1, y2, u, v;
-            y1 = unpack(0,long2px);
-            v  = unpack(1,long2px);
-            y2 = unpack(2,long2px);
-            u  = unpack(3,long2px);
+       
+        pixel565 =  (unpack(2,long2px) << 8) | unpack(3,long2px);
+        pixel565_2 = (unpack(0,long2px) << 8) | unpack(1,long2px);
 
-            pixel565 = fast_yuv_to_rgb565(y1,u,v);
-            pixel565_2 = fast_yuv_to_rgb565(y2,u,v);
-
-            sptr = &destline[current_dest_pos];
-            *sptr = pixel565;
-            sptr = &destline[current_dest_pos+2];
-            *sptr = pixel565_2;
-            current_dest_pos += 4;
-        } else if (format == CAMERA_PF_RGB565) {
-            pixel565 =  (unpack(2,long2px) << 8) | unpack(3,long2px);
-            pixel565_2 = (unpack(0,long2px) << 8) | unpack(1,long2px);
-
-            sptr = &destline[current_dest_pos];
-            *sptr = pixel565;
-            sptr = &destline[current_dest_pos+2];
-            *sptr = pixel565_2;
-            current_dest_pos += 4;
-        }
+        sptr = &destline[current_dest_pos];
+        *sptr = pixel565;
+        sptr = &destline[current_dest_pos+2];
+        *sptr = pixel565_2;
+        current_dest_pos += 4;
+        
     }
 }
 
