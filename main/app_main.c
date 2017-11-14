@@ -104,8 +104,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             s_ip_addr = event->event_info.got_ip.ip_info.ip;
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
-            /* This is a workaround as ESP32 WiFi libs don't currently
-             auto-reassociate. */
             esp_wifi_connect();
             xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
             break;
@@ -172,8 +170,7 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
             printf("framesize not init\n");
             break;
     }
-  
-    //config.frame_size
+
     for ( int current_pixel_pos = 0; current_pixel_pos < conver_times; current_pixel_pos += 2 )
     {
         current_src_pos = current_pixel_pos / 2;
@@ -201,155 +198,34 @@ static void http_server_netconn_serve(struct netconn *conn)
     if (err == ERR_OK) {
         netbuf_data(inbuf, (void**) &buf, &buflen);
         if (buflen >= 5 && buf[0] == 'G' && buf[1] == 'E' && buf[2] == 'T' && buf[3] == ' ' && buf[4] == '/') {
-            /* Send the HTTP header
-             * subtract 1 from the size, since we dont send the \0 in the string
-             * NETCONN_NOCOPY: our data is const static, so no need to copy it
-             * http_hdr : first address of data
-             * sizeof(http_hdr)-1: length of data
-             * err_t netconn_write(struct netconn *conn, const void *dataptr, size_t size, u8_t apiflags);
-             * #define NETCONN_NOFLAG 0X00
-             * #define NETCONN_NOCOPY 0X00 not copy dataptr data to buff, so don't modify data
-             * #define NETCONN_COPY   0X01 copy data to core thread space
-             * #define NETCONN_MORE   0X02 last TCP package's PSH will be set, and receiver will trans data to upper
-             */
             netconn_write(conn, http_hdr, sizeof(http_hdr) - 1,NETCONN_NOCOPY);
-            //check if a stream is requested.
-            if (buf[5] == 's') {
-                //Send mjpeg stream header
-                err = netconn_write(conn, http_stream_hdr, sizeof(http_stream_hdr) - 1,NETCONN_NOCOPY);
-                ESP_LOGD(TAG, "Stream started.");
-                ESP_LOGD(TAG, "write http_stream hdr  = %d", err);
-                //Run while everyhting is ok and connection open.
-                while(err == ERR_OK) {
-                    ESP_LOGD(TAG, "Capture frame");
-                    //PAUSE_DISPLAY = true;
-                    //err = camera_run();
-                    //PAUSE_DISPLAY = false;
-                    if (err != ESP_OK) {
-                        ESP_LOGD(TAG, "Camera capture failed with error = %d", err);
-                    } else {
-                        ESP_LOGD(TAG, "Done");
-                        //stream an image..
-                        if((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
-                            // write mime boundary start
-                            err = netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1,NETCONN_NOCOPY);
-                            // write bitmap header
-                            char *bmp = bmp_create_header565(camera_get_fb_width(), camera_get_fb_height());
-                            err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_NOCOPY);
-                            free(bmp);
-                            // convert framebuffer on the fly...
-                            // only rgb and yuv...
-                            uint8_t s_line[640*2];
-                            uint32_t *fbl;
-                            for (int i = 0; i < 480; i++) {
-                                fbl = &currFbPtr[(i*640)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                                convert_fb32bit_line_to_bmp565(fbl, s_line,s_pixel_format);
-                                err = netconn_write(conn, s_line, 640*2,NETCONN_COPY);
-                            }
-                        }else {
-                            // stream jpeg
-                            err = netconn_write(conn, http_jpg_hdr, sizeof(http_jpg_hdr) - 1,NETCONN_NOCOPY);
-                            if(err == ERR_OK)
-                                err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_COPY);
-                        }
-                        if(err == ERR_OK){
-                            //Send boundary to next jpeg
-                            err = netconn_write(conn, http_stream_boundary,sizeof(http_stream_boundary) -1, NETCONN_NOCOPY);
-                        }
-                        vTaskDelay(30 / portTICK_RATE_MS);
-                    }
-                }
-                ESP_LOGD(TAG, "Stream ended.");
-                ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
+            netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1, NETCONN_NOCOPY);
+            if (memcmp(&buf[5], "bmp", 3) == 0) {
+                char *bmp = bmp_create_header565(camera_get_fb_width(), camera_get_fb_height());
+                err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_COPY);
+                free(bmp);
             } else {
+                char outstr[120];
+                get_image_mime_info_str(outstr);
+                netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
+            }
+            ESP_LOGD(TAG, "Image requested Done.");
 
-                //CAMER_PF_JPEG
-                if (s_pixel_format == CAMERA_PF_JPEG) {
- 
-                    netconn_write(conn, http_jpg_hdr, sizeof(http_jpg_hdr) - 1, NETCONN_NOCOPY);
-
-                //CAMERA_PF_GRAYSCALE
-                } else if (s_pixel_format == CAMERA_PF_GRAYSCALE) {
-
-                    netconn_write(conn, http_pgm_hdr, sizeof(http_pgm_hdr) - 1, NETCONN_NOCOPY);
-                    if (memcmp(&buf[5], "pgm", 3) == 0) {
-                        char pgm_header[32];
-                        snprintf(pgm_header, sizeof(pgm_header), "P5 %d %d %d\n", camera_get_fb_width(), camera_get_fb_height(), 255);
-                        netconn_write(conn, pgm_header, strlen(pgm_header), NETCONN_COPY);
-                    }else {
-                        char outstr[120];
-                        get_image_mime_info_str(outstr);
-                        netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
-                        //netconn_write(conn, http_yuv422_hdr, sizeof(http_yuv422_hdr) - 1, NETCONN_NOCOPY);
-                    }
-
-                //CAMERA_PF_RGB565
-                } else if (s_pixel_format == CAMERA_PF_RGB565) {
-
-                    netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1, NETCONN_NOCOPY);
-                    if (memcmp(&buf[5], "bmp", 3) == 0) {
-                        char *bmp = bmp_create_header565(camera_get_fb_width(), camera_get_fb_height());
-                        err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_COPY);
-                        free(bmp);
-                    } else {
-                        char outstr[120];
-                        get_image_mime_info_str(outstr);
-                        netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
-                        //netconn_write(conn, http_yuv422_hdr, sizeof(http_yuv422_hdr) - 1, NETCONN_NOCOPY);
-                    }
-
-                //CAMERA_PF_YUV422
-                } else if (s_pixel_format == CAMERA_PF_YUV422) {
-
-                    if (memcmp(&buf[5], "bmp", 3) == 0) {
-     
-                        //PAUSE_DISPLAY = true;
-                        // send YUV converted to 565 2bpp for now...
-                        netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1, NETCONN_NOCOPY);
-                        char *bmp = bmp_create_header565(camera_get_fb_width(), camera_get_fb_height());
-                        err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_COPY);
-                        free(bmp);
-                    } else {
-                        char outstr[120];
-                        get_image_mime_info_str(outstr);
-                        netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
-
-                        //netconn_write(conn, http_yuv422_hdr, sizeof(http_yuv422_hdr) - 1, NETCONN_NOCOPY);
-                    }
-
-                //other
-                } else {
-
-                    char outstr[120];
-                    get_image_mime_info_str(outstr);
-                    netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
+            if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
+                ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
+                uint8_t s_line[640*2];
+                uint32_t *fbl;
+                for (int i = 0; i < 480; i++) {
+                    fbl = &currFbPtr[(i*640)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                    convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
+                    err = netconn_write(conn, s_line, 640*2, NETCONN_COPY);
                 }
-
-                // handle non streaming images (http../get and http:../bmp )
-                ESP_LOGD(TAG, "Image requested.");
-                //ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
-                //ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
-                if (err != ESP_OK) {
-                    ESP_LOGD(TAG, "Camera capture failed with error = %d", err);
-                } else {
-                    ESP_LOGD(TAG, "Done");
-                    //Send jpeg
-                    if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
-                        ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
-                        uint8_t s_line[640*2];
-                        uint32_t *fbl;
-                        for (int i = 0; i < 480; i++) {
-                            fbl = &currFbPtr[(i*640)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                            convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                            err = netconn_write(conn, s_line, 640*2, NETCONN_COPY);
-                        }
-                        printf("frame sending ok\n");
-                        //    ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
-                    } else
-                        err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_NOCOPY);
-                } // handle .bmp and std gets...
-            }// end GET request:
-        }
+                printf("frame sending ok\n");
+            } else{
+                err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_NOCOPY);
+            }
+           
+        }// end GET request:
     }
     netconn_close(conn); /* Close the connection (server closes in HTTP) */
     netbuf_delete(inbuf);/* Delete the buffer (netconn_recv gives us ownership,so we have to make sure to deallocate the buffer) */
@@ -357,67 +233,21 @@ static void http_server_netconn_serve(struct netconn *conn)
 
 static void http_server(void *pvParameters)
 {
-    /* in the lwip/api.h
-       struct netconn{
-        enum netconn_type type;
-        enum netconn_state state;
-        union {
-            struct ip_pcb *ip;  // ip control block
-            struct tcp_pcb *tcp; //tcp control block
-            struct udp_pcb *udp; //udp control block
-            struct raw_pcb *raw; // raw control block
-        } pcb;
-        err_t err;  //err flag
-        sys_sem_t op_completed; //semphare
-        sys_mbox_t recvmbox; //receve message box, buff queue
-        sys_mbox_t acceptmbox; //connect accept queue
-        int socket; //socket handle
-        s16_t recv_avail; //buffed len in the receive message box
-        struct api_msg_msg *write_msg; //send buff full, data storage here
-        size_t write_offset; //next times send index
-        netconn_callback callback; //about connect callback function 
-       }
-    */
     struct netconn *conn, *newconn;  
     err_t err,ert;
-    /*
-        alloc netconn space for netconn struct     
-    */
     conn = netconn_new(NETCONN_TCP);  /* creat TCP connector */
-    /*
-    bind netconn&localIP&localPORT
-    */
     netconn_bind(conn, NULL, 80);  /* bind HTTP port */
-    /*
-    SERVER listen state , register accept_function, if new conn come 
-    */
     netconn_listen(conn);  /* server listen connect */
     do {
-        /*
-        netconn_accept: get a new conn from acceptmbox, if acceptmbox is NULL,
-                        the thread will be blocked until new conn come. it is diffent of the API 
-                        from IDF,as idf return esp log
-
-        return:         address of new conn struct
-        include:        err_t   netconn_accept(struct netconn *conn, struct netconn **new_conn);
-        */
         err = netconn_accept(conn, &newconn);
         if (err == ERR_OK) {    /* new conn is coming */
             ert = camera_run();
             printf("%s\n",ert == ERR_OK ? "camer run success" : "camera run failed" );
             vTaskDelay(3000 / portTICK_RATE_MS);
             http_server_netconn_serve(newconn);
-            /*
-            netconn_delete: if status is connecting, after call this function, do active close.
-             , delete newconn struct in the end.
-            */
             netconn_delete(newconn);
         }
     } while (err == ERR_OK);
-    /*
-        netconn_close: function is close TCP conn, means that send a FIN package and return.
-        notes: did not delete the netconn, if user want to delete the struct, call netconn_delete  
-    */
     netconn_close(conn);
     netconn_delete(conn);
 }
