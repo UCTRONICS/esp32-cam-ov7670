@@ -21,6 +21,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/semphr.h"
+#include "lwip/sys.h"
+#include "lwip/netdb.h"
+#include "lwip/api.h"
 
 #include "esp_heap_caps.h"
 #include "esp_system.h"
@@ -35,14 +39,10 @@
 #include "esp_attr.h"
 
 #include "soc/gpio_struct.h"
-#include "freertos/semphr.h"
 #include "esp_err.h"
 #include "camera.h"
 #include "user_config.h"
 
-#include "lwip/sys.h"
-#include "lwip/netdb.h"
-#include "lwip/api.h"
 #include "bitmap.h"
 
 static const char* TAG = "ESP-CAM";
@@ -82,12 +82,7 @@ inline uint8_t unpack(int byteNumber, uint32_t value) {
 
 // camera code
 const static char http_hdr[] = "HTTP/1.1 200 OK\r\n";
-const static char http_stream_hdr[] ="Content-type: multipart/x-mixed-replace; boundary=123456789000000000000987654321\r\n\r\n";
-const static char http_jpg_hdr[] ="Content-type: image/jpg\r\n\r\n";
-const static char http_pgm_hdr[] ="Content-type: image/x-portable-graymap\r\n\r\n";
-const static char http_stream_boundary[] = "--123456789000000000000987654321\r\n";
 const static char http_bitmap_hdr[] ="Content-type: image/bitmap\r\n\r\n";
-const static char http_yuv422_hdr[] ="Content-Disposition: attachment; Content-type: application/octet-stream\r\n\r\n";
 
 static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
@@ -198,6 +193,7 @@ static void http_server_netconn_serve(struct netconn *conn)
     if (err == ERR_OK) {
         netbuf_data(inbuf, (void**) &buf, &buflen);
         if (buflen >= 5 && buf[0] == 'G' && buf[1] == 'E' && buf[2] == 'T' && buf[3] == ' ' && buf[4] == '/') {
+            ESP_LOGD(TAG, "Start Image Sending...");
             netconn_write(conn, http_hdr, sizeof(http_hdr) - 1,NETCONN_NOCOPY);
             netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1, NETCONN_NOCOPY);
             if (memcmp(&buf[5], "bmp", 3) == 0) {
@@ -209,10 +205,8 @@ static void http_server_netconn_serve(struct netconn *conn)
                 get_image_mime_info_str(outstr);
                 netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
             }
-            ESP_LOGD(TAG, "Image requested Done.");
-
+            
             if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
-                ESP_LOGD(TAG, "Converting framebuffer to RGB565 requested, sending...");
                 uint8_t s_line[640*2];
                 uint32_t *fbl;
                 for (int i = 0; i < 480; i++) {
@@ -220,7 +214,7 @@ static void http_server_netconn_serve(struct netconn *conn)
                     convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
                     err = netconn_write(conn, s_line, 640*2, NETCONN_COPY);
                 }
-                printf("frame sending ok\n");
+                ESP_LOGD(TAG,"Image sending Done ...");
             } else{
                 err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_NOCOPY);
             }
@@ -270,7 +264,6 @@ void app_main()
     ESP_LOGI(TAG, "Wifi Initialized...");
 
     init_wifi();
-    ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
 
     // VERY UNSTABLE without this delay after init'ing wifi...
     // however, much more stable with a new Power Supply
@@ -283,22 +276,13 @@ void app_main()
         ESP_LOGE(TAG, "Camera probe failed with error 0x%x", err);
         return;
     }
-    if (camera_model == CAMERA_OV7725) {
-        ESP_LOGI(TAG, "Detected OV7725 camera, using grayscale bitmap format");
-        s_pixel_format = CAMERA_PIXEL_FORMAT;
-        config.frame_size = CAMERA_FRAME_SIZE;
-    } else if (camera_model == CAMERA_OV7670) {
+
+    if (camera_model == CAMERA_OV7670) {
         ESP_LOGI(TAG, "Detected OV7670 camera");
         s_pixel_format = CAMERA_PIXEL_FORMAT;
         config.frame_size = CAMERA_FRAME_SIZE;
-    } else if (camera_model == CAMERA_OV2640) {
-        ESP_LOGI(TAG, "Detected OV2640 camera, using JPEG format");
-        s_pixel_format = CAMERA_PF_JPEG;
-        config.frame_size = CAMERA_FS_VGA;
-        config.jpeg_quality = 15;
-    } else {
-        ESP_LOGE(TAG, "Camera not supported");
-        return;
+    }else{
+        ESP_LOGI(TAG,"Cant detected ov7670 camera");
     }
 
     config.displayBuffer = currFbPtr;
@@ -316,11 +300,9 @@ void app_main()
     xTaskCreatePinnedToCore(&http_server, "http_server", 4096, NULL, 5, NULL,1);
 
     ESP_LOGI(TAG, "open http://" IPSTR "/bmp for single image/bitmap image", IP2STR(&s_ip_addr));
-    ESP_LOGI(TAG, "open http://" IPSTR "/stream for multipart/x-mixed-replace stream of bitmaps", IP2STR(&s_ip_addr));
     ESP_LOGI(TAG, "open http://" IPSTR "/get for raw image as stored in framebuffer ", IP2STR(&s_ip_addr));
 
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
     ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
     ESP_LOGI(TAG, "Camera demo ready.");
-
 }
