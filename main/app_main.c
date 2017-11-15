@@ -87,7 +87,8 @@ const static char http_bitmap_hdr[] ="Content-type: image/bitmap\r\n\r\n";
 static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
 static ip4_addr_t s_ip_addr;
-
+tcpip_adapter_ip_info_t ip_info_t;
+/*
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
     switch (event->event_id) {
@@ -131,7 +132,48 @@ static void init_wifi(void)
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
     ESP_LOGI(TAG, "Connected");
 }
+*/
+//wifi_init_softap
 
+void init_wifi()
+{
+    wifi_event_group = xEventGroupCreate();
+    tcpip_adapter_init();
+    tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
+    memset(&ip_info_t,0,sizeof(tcpip_adapter_ip_info_t));
+
+    ip_info_t.ip.addr = ipaddr_addr("192.168.1.1");
+    ip_info_t.gw.addr = ipaddr_addr("192.168.1.1");
+    ip_info_t.netmask.addr = ipaddr_addr("255.255.255.0");
+
+    tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP,&ip_info_t);
+
+    tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP);
+    ESP_ERROR_CHECK(esp_event_loop_init(NULL, NULL));
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    esp_wifi_set_storage(WIFI_STORAGE_RAM);
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+
+    wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = "ESP-OV",
+            .max_connection = 3,
+            .password = "qi110110",
+            .authmode = WIFI_AUTH_WPA_WPA2_PSK
+        },
+    };
+
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+    
+    ESP_ERROR_CHECK(esp_wifi_start());
+    
+
+}
 static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline, const camera_pixelformat_t format) {
 
     uint16_t pixel565 = 0;
@@ -140,31 +182,7 @@ static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline,
     uint16_t *sptr;
     uint16_t conver_times;
     uint16_t current_src_pos = 0, current_dest_pos = 0;
-
-    switch(s_framesize)
-    {
-        case CAMERA_FS_SVGA:
-            conver_times = 800;
-            break;
-        case CAMERA_FS_VGA:
-            conver_times = 640;
-            break;
-        case CAMERA_FS_QVGA:
-            conver_times = 320;
-            break;
-        case CAMERA_FS_QCIF:
-            conver_times = 176;
-            break;
-        case CAMERA_FS_HQVGA:
-            conver_times = 240;
-            break;
-        case CAMERA_FS_QQVGA:
-            conver_times = 160;
-            break;
-        default:
-            printf("framesize not init\n");
-            break;
-    }
+    conver_times = camera_get_fb_width();
 
     for ( int current_pixel_pos = 0; current_pixel_pos < conver_times; current_pixel_pos += 2 )
     {
@@ -218,7 +236,6 @@ static void http_server_netconn_serve(struct netconn *conn)
             } else{
                 err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_NOCOPY);
             }
-           
         }// end GET request:
     }
     netconn_close(conn); /* Close the connection (server closes in HTTP) */
@@ -299,9 +316,9 @@ void app_main()
     ESP_LOGD(TAG, "Starting http_server task...");
     xTaskCreatePinnedToCore(&http_server, "http_server", 4096, NULL, 5, NULL,1);
 
-    ESP_LOGI(TAG, "open http://" IPSTR "/bmp for single image/bitmap image", IP2STR(&s_ip_addr));
-    ESP_LOGI(TAG, "open http://" IPSTR "/get for raw image as stored in framebuffer ", IP2STR(&s_ip_addr));
-
+    //ESP_LOGI(TAG, "open http://" IPSTR "/bmp for single image/bitmap image", IP2STR(&(ip_info_t.ip.addr)));
+    //ESP_LOGD(TAG, "dhcp server start:(ip: " IPSTR ", mask: " IPSTR ", gw: " IPSTR ")",
+     //              IP2STR(&ip_info_t->ip), IP2STR(&ip_info_t->netmask), IP2STR(&ip_info_t->gw));
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
     ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
     ESP_LOGI(TAG, "Camera demo ready.");

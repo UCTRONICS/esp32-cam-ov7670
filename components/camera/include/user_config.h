@@ -6,6 +6,8 @@
 extern "C" {
 #endif
 
+#include "tcpip_adapter.h"
+
 #define WIFI_PASSWORD CONFIG_WIFI_PASSWORD
 #define WIFI_SSID     CONFIG_WIFI_SSID
 /*
