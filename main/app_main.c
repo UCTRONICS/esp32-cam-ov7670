@@ -47,32 +47,6 @@
 
 static const char* TAG = "ESP-CAM";
 
-// config camera
-static camera_pixelformat_t s_pixel_format = CAMERA_PIXEL_FORMAT;
-static camera_framesize_t s_framesize = CAMERA_FRAME_SIZE;
-static camera_model_t camera_model;
-static camera_config_t config = {
-    .ledc_channel = LEDC_CHANNEL_0,
-    .ledc_timer = LEDC_TIMER_0,
-    .pin_d0 = CONFIG_D0,
-    .pin_d1 = CONFIG_D1,
-    .pin_d2 = CONFIG_D2,
-    .pin_d3 = CONFIG_D3,
-    .pin_d4 = CONFIG_D4,
-    .pin_d5 = CONFIG_D5,
-    .pin_d6 = CONFIG_D6,
-    .pin_d7 = CONFIG_D7,
-    .pin_xclk = CONFIG_XCLK,
-    .pin_pclk = CONFIG_PCLK,
-    .pin_vsync = CONFIG_VSYNC,
-    .pin_href = CONFIG_HREF,
-    .pin_sscb_sda = CONFIG_SDA,
-    .pin_sscb_scl = CONFIG_SCL,
-    .pin_reset = CONFIG_RESET,
-    .xclk_freq_hz = CONFIG_XCLK_FREQ,
-    //.test_pattern_enabled = CONFIG_ENABLE_TEST_PATTERN,
-};
-
 //Warning: This gets squeezed into IRAM.
 volatile static uint32_t *currFbPtr __attribute__ ((aligned(4))) = NULL;
 
@@ -101,7 +75,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         case SYSTEM_EVENT_STA_DISCONNECTED:
             esp_wifi_connect();
             xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
-            break;
+            break; 
         default:
             break;
     }
@@ -132,40 +106,16 @@ static void init_wifi(void)
     ESP_LOGI(TAG, "Connected");
 }
 
-static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline, const camera_pixelformat_t format) {
+static void convert_fb32bit_line_to_bmp565(uint32_t *srcline, uint8_t *destline) {
 
     uint16_t pixel565 = 0;
     uint16_t pixel565_2 = 0;
     uint32_t long2px = 0;
     uint16_t *sptr;
-    uint16_t conver_times;
+    uint16_t conver_times = 640;
     uint16_t current_src_pos = 0, current_dest_pos = 0;
 
-    switch(s_framesize)
-    {
-        case CAMERA_FS_SVGA:
-            conver_times = 800;
-            break;
-        case CAMERA_FS_VGA:
-            conver_times = 640;
-            break;
-        case CAMERA_FS_QVGA:
-            conver_times = 320;
-            break;
-        case CAMERA_FS_QCIF:
-            conver_times = 176;
-            break;
-        case CAMERA_FS_HQVGA:
-            conver_times = 240;
-            break;
-        case CAMERA_FS_QQVGA:
-            conver_times = 160;
-            break;
-        default:
-            printf("framesize not init\n");
-            break;
-    }
-
+   
     for ( int current_pixel_pos = 0; current_pixel_pos < conver_times; current_pixel_pos += 2 )
     {
         current_src_pos = current_pixel_pos / 2;
@@ -196,29 +146,15 @@ static void http_server_netconn_serve(struct netconn *conn)
             ESP_LOGD(TAG, "Start Image Sending...");
             netconn_write(conn, http_hdr, sizeof(http_hdr) - 1,NETCONN_NOCOPY);
             netconn_write(conn, http_bitmap_hdr, sizeof(http_bitmap_hdr) - 1, NETCONN_NOCOPY);
-            if (memcmp(&buf[5], "bmp", 3) == 0) {
-                char *bmp = bmp_create_header565(camera_get_fb_width(), camera_get_fb_height());
-                err = netconn_write(conn, bmp, sizeof(bitmap565), NETCONN_COPY);
-                free(bmp);
-            } else {
-                char outstr[120];
-                get_image_mime_info_str(outstr);
-                netconn_write(conn, outstr, sizeof(outstr) - 1, NETCONN_NOCOPY);
+    
+            uint8_t s_line[640*2];
+            uint32_t *fbl;
+            for (int i = 0; i < 480; i++) {
+                fbl = &currFbPtr[(i*640)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
+                convert_fb32bit_line_to_bmp565(fbl, s_line);
+                err = netconn_write(conn, s_line, 640*2, NETCONN_COPY);
             }
-            
-            if ((s_pixel_format == CAMERA_PF_RGB565) || (s_pixel_format == CAMERA_PF_YUV422)) {
-                uint8_t s_line[640*2];
-                uint32_t *fbl;
-                for (int i = 0; i < 480; i++) {
-                    fbl = &currFbPtr[(i*640)/2];  //(i*(320*2)/4); // 4 bytes for each 2 pixel / 2 byte read..
-                    convert_fb32bit_line_to_bmp565(fbl, s_line, s_pixel_format);
-                    err = netconn_write(conn, s_line, 640*2, NETCONN_COPY);
-                }
-                ESP_LOGD(TAG,"Image sending Done ...");
-            } else{
-                err = netconn_write(conn, camera_get_fb(), camera_get_data_size(),NETCONN_NOCOPY);
-            }
-           
+            ESP_LOGD(TAG,"Image sending Done ...");
         }// end GET request:
     }
     netconn_close(conn); /* Close the connection (server closes in HTTP) */
@@ -235,8 +171,6 @@ static void http_server(void *pvParameters)
     do {
         err = netconn_accept(conn, &newconn);
         if (err == ERR_OK) {    /* new conn is coming */
-            ert = camera_run();
-            printf("%s\n",ert == ERR_OK ? "camer run success" : "camera run failed" );
             vTaskDelay(3000 / portTICK_RATE_MS);
             http_server_netconn_serve(newconn);
             netconn_delete(newconn);
@@ -265,35 +199,6 @@ void app_main()
 
     init_wifi();
 
-    // VERY UNSTABLE without this delay after init'ing wifi...
-    // however, much more stable with a new Power Supply
-    vTaskDelay(5000 / portTICK_RATE_MS);
-    ESP_LOGI(TAG, "Free heap: %u", xPortGetFreeHeapSize());
-
-    // camera init
-    esp_err_t err = camera_probe(&config, &camera_model);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Camera probe failed with error 0x%x", err);
-        return;
-    }
-
-    if (camera_model == CAMERA_OV7670) {
-        ESP_LOGI(TAG, "Detected OV7670 camera");
-        s_pixel_format = CAMERA_PIXEL_FORMAT;
-        config.frame_size = CAMERA_FRAME_SIZE;
-    }else{
-        ESP_LOGI(TAG,"Cant detected ov7670 camera");
-    }
-
-    config.displayBuffer = currFbPtr;
-    config.pixel_format = s_pixel_format;
-
-    err = camera_init(&config);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Camera init failed with error 0x%x", err);
-        return;
-    }
-
     vTaskDelay(2000 / portTICK_RATE_MS);
 
     ESP_LOGD(TAG, "Starting http_server task...");
@@ -304,5 +209,5 @@ void app_main()
 
     ESP_LOGI(TAG,"get free size of 32BIT heap : %d\n",heap_caps_get_free_size(MALLOC_CAP_32BIT));
     ESP_LOGI(TAG, "task stack: %d", uxTaskGetStackHighWaterMark(NULL));
-    ESP_LOGI(TAG, "Camera demo ready.");
+    ESP_LOGI(TAG, "camera ready");
 }
